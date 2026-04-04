@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exit Game: Das Detektivbüro der Zahlen – Tabellenkalkulation</title>
+  <meta name="description" content="Digitales Exit Game zur Tabellenkalkulation für Klasse 8 – rekonstruiere fünf beschädigte Akten und rette das Detektivbüro!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== CSS CUSTOM PROPERTIES ===== */
+    :root {
+      --color-bg: #1a1f2e;
+      --color-surface: #242938;
+      --color-surface-elevated: #2e3447;
+      --color-accent: #4caf78;
+      --color-accent-dim: #357a54;
+      --color-accent-bright: #6dd49a;
+      --color-accent-subtle: #1a3028;
+      --color-text-primary: #e8e0d0;
+      --color-text-secondary: #b8b0a0;
+      --color-text-muted: #7a7265;
+      --color-success: #4caf78;
+      --color-success-bg: #1a3028;
+      --color-error: #e05c5c;
+      --color-error-bg: #2e1a1a;
+      --color-border: #3a3f52;
+      --color-border-strong: #555a6e;
+      --color-focus: #6dd49a;
+      --color-hint: #78a7cf;
+      --color-hint-bg: #1a2535;
+      --color-warning: #d4a843;
+      --font-heading: 'Courier Prime', 'Courier New', monospace;
+      --font-body: 'Source Serif 4', Georgia, serif;
+      --font-ui: 'Courier Prime', monospace;
+      --text-xs: 0.75rem;
+      --text-sm: 0.875rem;
+      --text-base: 1rem;
+      --text-md: 1.125rem;
+      --text-lg: 1.25rem;
+      --text-xl: 1.5rem;
+      --text-2xl: 1.875rem;
+      --text-3xl: 2.25rem;
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 4px 20px rgba(0,0,0,0.5);
+      --shadow-accent: 0 0 16px rgba(76,175,120,0.25);
+      --max-width: 820px;
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--color-bg);
+      background-image:
+        linear-gradient(rgba(76,175,120,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(76,175,120,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      font-size: var(--text-md);
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    /* ===== SKIP LINK ===== */
+    .skip-link {
+      position: absolute;
+      top: -9999px;
+      left: var(--space-4);
+      background: var(--color-accent);
+      color: #0d1a14;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-sm);
+      z-index: 9999;
+      text-decoration: none;
+    }
+    .skip-link:focus {
+      top: var(--space-2);
+    }
+
+    /* ===== TOOLBAR ===== */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--space-4) var(--space-4) 0;
+    }
+
+    .difficulty-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .toggle-label {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .toggle-btn {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      background: transparent;
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-4);
+      cursor: pointer;
+      min-height: 44px;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active,
+    .toggle-btn[aria-pressed="true"] {
+      background: var(--color-accent-subtle);
+      color: var(--color-accent-bright);
+      border-color: var(--color-accent-dim);
+    }
+
+    .toggle-btn:hover {
+      border-color: var(--color-accent-dim);
+      color: var(--color-accent);
+    }
+
+    .toggle-btn:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    .btn-sound {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      background: transparent;
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-4);
+      cursor: pointer;
+      min-height: 44px;
+      transition: all 0.2s;
+    }
+
+    .btn-sound:hover {
+      border-color: var(--color-accent-dim);
+      color: var(--color-accent);
+    }
+
+    .btn-sound:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    /* ===== FORTSCHRITT ===== */
+    .progress-bar-wrap {
+      max-width: var(--max-width);
+      margin: var(--space-4) auto 0;
+      padding: 0 var(--space-4);
+    }
+
+    .progress-text {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-2);
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--color-surface);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid var(--color-border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-accent-dim), var(--color-accent));
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .progress-fill { transition: none; }
+    }
+
+    /* ===== HAUPT-LAYOUT ===== */
+    #main-content {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--space-6) var(--space-4) var(--space-12);
+    }
+
+    /* ===== HUB VIEW ===== */
+    .hub-header {
+      text-align: center;
+      margin-bottom: var(--space-8);
+      padding: var(--space-8) var(--space-6);
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-card);
+    }
+
+    .hub-eyebrow {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      color: var(--color-accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-3);
+    }
+
+    .hub-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.2;
+      margin-bottom: var(--space-4);
+    }
+
+    .hub-subtitle {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-6);
+    }
+
+    .hub-intro {
+      font-size: var(--text-md);
+      color: var(--color-text-secondary);
+      line-height: 1.75;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ===== HUB CARDS ===== */
+    .hub-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    .hub-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      min-height: 100px;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      text-align: left;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      color: var(--color-text-primary);
+    }
+
+    .hub-card:hover {
+      border-color: var(--color-accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-accent);
+    }
+
+    .hub-card:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    .hub-card.solved {
+      border-color: var(--color-success);
+      background: var(--color-success-bg);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hub-card { transition: none; }
+      .hub-card:hover { transform: none; }
+    }
+
+    .hub-card-number {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      letter-spacing: 0.08em;
+    }
+
+    .hub-card-title {
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+    }
+
+    .hub-card-status {
+      margin-top: auto;
+      font-size: var(--text-sm);
+      color: var(--color-accent-dim);
+    }
+
+    .hub-card.solved .hub-card-status {
+      color: var(--color-success);
+    }
+
+    /* ===== PUZZLE VIEW ===== */
+    #view-puzzle {
+      display: none;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: transparent;
+      color: var(--color-accent);
+      border: 1px solid var(--color-accent-dim);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-5);
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      cursor: pointer;
+      min-height: 44px;
+      margin-bottom: var(--space-6);
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .btn-back:hover {
+      background: var(--color-accent-subtle);
+      border-color: var(--color-accent);
+    }
+
+    .btn-back:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    /* ===== PUZZLE CARD ===== */
+    .puzzle-card {
+      background: var(--color-surface);
+      border-left: 3px solid var(--color-accent-dim);
+      border-radius: var(--radius-md);
+      padding: var(--space-8);
+      box-shadow: var(--shadow-card);
+      border-top: 1px solid var(--color-border);
+      border-right: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .puzzle-card.solved {
+      border-left-color: var(--color-success);
+    }
+
+    .puzzle-card.just-solved {
+      animation: solvedPulse 0.6s ease;
+    }
+
+    @keyframes solvedPulse {
+      0% { box-shadow: var(--shadow-card); }
+      50% { box-shadow: 0 0 32px rgba(76,175,120,0.5), var(--shadow-card); }
+      100% { box-shadow: var(--shadow-card); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .puzzle-card.just-solved { animation: none; }
+    }
+
+    .puzzle-number {
+      font-family: var(--font-ui);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-2);
+    }
+
+    .puzzle-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-6);
+      line-height: 1.25;
+    }
+
+    .puzzle-title:focus {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* ===== DIFFERENZIERUNG ===== */
+    body.level-a .text-b { display: none; }
+    body.level-b .text-a { display: none; }
+    body.level-a .text-a { display: block; }
+    body.level-b .text-b { display: block; }
+
+    .puzzle-text {
+      font-size: 1.125rem; /* 18px Mindestgröße für Rätseltext */
+      line-height: 1.75;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-6);
+      padding: var(--space-5);
+      background: var(--color-surface-elevated);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+    }
+
+    .puzzle-text p { margin-bottom: var(--space-3); }
+    .puzzle-text p:last-child { margin-bottom: 0; }
+
+    .puzzle-text strong {
+      color: var(--color-text-primary);
+      font-weight: 600;
+    }
+
+    .puzzle-text code {
+      font-family: var(--font-ui);
+      background: var(--color-bg);
+      color: var(--color-accent-bright);
+      padding: 0.1em 0.4em;
+      border-radius: var(--radius-sm);
+      font-size: 0.95em;
+    }
+
+    .puzzle-task {
+      font-size: var(--text-md);
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-4);
+      line-height: 1.5;
+    }
+
+    /* ===== ANTWORT-BEREICH ===== */
+    .answer-area {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-4);
+    }
+
+    .answer-input {
+      flex: 1 1 200px;
+      font-family: var(--font-ui);
+      font-size: var(--text-md);
+      background: var(--color-surface-elevated);
+      color: var(--color-text-primary);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-3) var(--space-4);
+      min-height: 44px;
+      transition: border-color 0.2s;
+    }
+
+    .answer-input::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    .answer-input:focus {
+      outline: none;
+      border-color: var(--color-focus);
+      box-shadow: 0 0 0 3px rgba(109,212,154,0.25);
+    }
+
+    .answer-input.correct {
+      border-color: var(--color-success);
+      background: var(--color-success-bg);
+      color: var(--color-accent-bright);
+    }
+
+    .answer-input.incorrect {
+      border-color: var(--color-error);
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%  { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+      100% { transform: translateX(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .answer-input.incorrect { animation: none; }
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+      font-family: var(--font-ui);
+      font-size: var(--text-base);
+      font-weight: 700;
+      background: var(--color-accent);
+      color: #0d1a14;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: var(--space-3) var(--space-6);
+      min-height: 44px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-accent-bright);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary:disabled {
+      background: var(--color-accent-dim);
+      color: #0d1a14;
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .btn-primary:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    /* ===== FEEDBACK ===== */
+    .feedback-message {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      min-height: 1.5em;
+      margin-bottom: var(--space-4);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-sm);
+    }
+
+    .feedback-message.success {
+      background: var(--color-success-bg);
+      color: var(--color-accent-bright);
+      border: 1px solid var(--color-accent-dim);
+    }
+
+    .feedback-message.error {
+      background: var(--color-error-bg);
+      color: var(--color-error);
+      border: 1px solid var(--color-error);
+    }
+
+    /* ===== TIPP-BUTTONS ===== */
+    .hint-buttons {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-4);
+    }
+
+    .btn-hint {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      background: transparent;
+      color: var(--color-hint);
+      border: 1px solid var(--color-accent-dim);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-4);
+      min-height: 44px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .btn-hint:hover {
+      background: var(--color-hint-bg);
+      border-color: var(--color-hint);
+    }
+
+    .btn-hint:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-hint:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    .btn-hint.hint-highlight {
+      animation: hintPulse 1s ease 2;
+      border-color: var(--color-warning);
+      color: var(--color-warning);
+    }
+
+    @keyframes hintPulse {
+      0%, 100% { box-shadow: none; }
+      50% { box-shadow: 0 0 12px rgba(212,168,67,0.6); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn-hint.hint-highlight { animation: none; }
+    }
+
+    /* ===== TIPP-BOX ===== */
+    .hint-box {
+      background: var(--color-hint-bg);
+      border: 1px solid var(--color-hint);
+      border-radius: var(--radius-sm);
+      padding: var(--space-4);
+      margin-bottom: var(--space-3);
+    }
+
+    .hint-label {
+      font-family: var(--font-ui);
+      font-size: var(--text-xs);
+      color: var(--color-hint);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-2);
+    }
+
+    .hint-text {
+      font-size: var(--text-md);
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ===== VICTORY SCREEN ===== */
+    #victory-screen {
+      display: none;
+      background: var(--color-surface);
+      border: 2px solid var(--color-success);
+      border-radius: var(--radius-lg);
+      padding: var(--space-10);
+      text-align: center;
+      box-shadow: 0 0 40px rgba(76,175,120,0.3), var(--shadow-card);
+    }
+
+    #victory-screen.visible {
+      display: block;
+    }
+
+    #victory-screen:focus {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 4px;
+    }
+
+    .victory-icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-4);
+    }
+
+    .victory-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      color: var(--color-accent-bright);
+      margin-bottom: var(--space-4);
+      line-height: 1.2;
+    }
+
+    .victory-text {
+      font-size: var(--text-md);
+      color: var(--color-text-secondary);
+      line-height: 1.75;
+      max-width: 560px;
+      margin: 0 auto var(--space-6);
+    }
+
+    .victory-reflection {
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      text-align: left;
+      max-width: 560px;
+      margin: 0 auto var(--space-8);
+    }
+
+    .victory-reflection-label {
+      font-family: var(--font-ui);
+      font-size: var(--text-xs);
+      color: var(--color-accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-3);
+    }
+
+    .victory-reflection-text {
+      font-size: var(--text-md);
+      color: var(--color-text-primary);
+      line-height: 1.65;
+    }
+
+    .btn-restart {
+      font-family: var(--font-ui);
+      font-size: var(--text-base);
+      font-weight: 700;
+      background: transparent;
+      color: var(--color-accent);
+      border: 2px solid var(--color-accent-dim);
+      border-radius: var(--radius-sm);
+      padding: var(--space-3) var(--space-8);
+      min-height: 44px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .btn-restart:hover {
+      background: var(--color-accent-subtle);
+      border-color: var(--color-accent);
+    }
+
+    .btn-restart:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    /* ===== VORLESEN-BUTTON ===== */
+    .btn-speak {
+      font-family: var(--font-ui);
+      font-size: var(--text-sm);
+      background: transparent;
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-4);
+      cursor: pointer;
+      min-height: 44px;
+      margin-bottom: var(--space-4);
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .btn-speak:hover {
+      border-color: var(--color-accent-dim);
+      color: var(--color-accent);
+    }
+
+    .btn-speak[aria-pressed="true"] {
+      background: var(--color-accent-subtle);
+      color: var(--color-accent-bright);
+      border-color: var(--color-accent-dim);
+    }
+
+    .btn-speak:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .hub-title { font-size: var(--text-xl); }
+      .puzzle-title { font-size: var(--text-lg); }
+      .hub-grid { grid-template-columns: 1fr; }
+      .puzzle-card { padding: var(--space-5); }
+      .answer-area { flex-direction: column; }
+      .answer-input { flex: none; width: 100%; }
+    }
+  </style>
+</head>
+<body class="level-a">
+
+  <a class="skip-link" href="#main-content">Zum Hauptinhalt springen</a>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar" role="banner">
+    <div class="difficulty-toggle" role="group" aria-label="Schwierigkeitsebene wählen">
+      <span class="toggle-label" id="toggle-label">Ebene:</span>
+      <button
+        class="toggle-btn active"
+        id="btn-level-a"
+        aria-pressed="true"
+        aria-describedby="toggle-label"
+        onclick="setLevel('a')"
+      >Regelkurs (A)</button>
+      <button
+        class="toggle-btn"
+        id="btn-level-b"
+        aria-pressed="false"
+        aria-describedby="toggle-label"
+        onclick="setLevel('b')"
+      >Einfache Sprache (B)</button>
+    </div>
+
+    <button
+      class="btn-sound"
+      id="btn-sound"
+      aria-pressed="true"
+      aria-label="Ton: eingeschaltet. Klicken zum Stummschalten."
+      onclick="toggleSound()"
+    >🔊 Ton an</button>
+  </div>
+
+  <!-- FORTSCHRITT -->
+  <div class="progress-bar-wrap">
+    <div
+      class="progress-text"
+      id="progress-text"
+      aria-live="polite"
+      role="status"
+    >🔍 0 von 5 Akten rekonstruiert</div>
+    <div
+      class="progress-bar"
+      role="progressbar"
+      aria-valuenow="0"
+      aria-valuemin="0"
+      aria-valuemax="5"
+      aria-label="Fortschrittsbalken: 0 von 5 Akten gelöst"
+    >
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- HAUPTINHALT -->
+  <main id="main-content">
+
+    <!-- ===== HUB VIEW ===== -->
+    <div id="view-hub">
+
+      <!-- Intro -->
+      <div class="hub-header">
+        <div class="hub-eyebrow" aria-hidden="true">Exit Game · Informatik · Klasse 8</div>
+        <h1 class="hub-title">Das Detektivbüro der Zahlen</h1>
+        <div class="hub-subtitle">Tabellenkalkulation – Fünf Akten warten auf Rekonstruktion</div>
+        <p class="hub-intro">
+          Das Detektivbüro der Zahlen ist in Not. Fünf wichtige Akten wurden beschädigt — entscheidende Informationen fehlen! Nur wer die Geheimnisse der Tabellenkalkulation kennt, kann die Akten rekonstruieren. Du bist heute Detektiv:in im Einsatz. Löse alle fünf Fälle und rette das Büro!
+        </p>
+      </div>
+
+      <!-- Hub-Karten -->
+      <nav aria-label="Akten-Übersicht">
+        <div class="hub-grid">
+          <button
+            class="hub-card"
+            id="hub-card-1"
+            aria-label="Akte 1: Das verschwundene Koordinatensystem – offen"
+            onclick="showPuzzle(1)"
+          >
+            <span class="hub-card-number">AKTE 01</span>
+            <span class="hub-card-title">Das verschwundene Koordinatensystem</span>
+            <span class="hub-card-status" id="hub-status-1">Akte öffnen →</span>
+          </button>
+
+          <button
+            class="hub-card"
+            id="hub-card-2"
+            aria-label="Akte 2: Der stumme Zeuge – offen"
+            onclick="showPuzzle(2)"
+          >
+            <span class="hub-card-number">AKTE 02</span>
+            <span class="hub-card-title">Der stumme Zeuge</span>
+            <span class="hub-card-status" id="hub-status-2">Akte öffnen →</span>
+          </button>
+
+          <button
+            class="hub-card"
+            id="hub-card-3"
+            aria-label="Akte 3: Das Startsignal – offen"
+            onclick="showPuzzle(3)"
+          >
+            <span class="hub-card-number">AKTE 03</span>
+            <span class="hub-card-title">Das Startsignal</span>
+            <span class="hub-card-status" id="hub-status-3">Akte öffnen →</span>
+          </button>
+
+          <button
+            class="hub-card"
+            id="hub-card-4"
+            aria-label="Akte 4: Die magische Formel – offen"
+            onclick="showPuzzle(4)"
+          >
+            <span class="hub-card-number">AKTE 04</span>
+            <span class="hub-card-title">Die magische Formel</span>
+            <span class="hub-card-status" id="hub-status-4">Akte öffnen →</span>
+          </button>
+
+          <button
+            class="hub-card"
+            id="hub-card-5"
+            aria-label="Akte 5: Der sabotierte Bericht – offen"
+            onclick="showPuzzle(5)"
+          >
+            <span class="hub-card-number">AKTE 05</span>
+            <span class="hub-card-title">Der sabotierte Bericht</span>
+            <span class="hub-card-status" id="hub-status-5">Akte öffnen →</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Sieg-Bildschirm (im Hub, wird eingeblendet) -->
+      <div id="victory-screen" tabindex="-1" role="region" aria-label="Ziel erreicht: Alle Akten rekonstruiert">
+        <div class="victory-icon" aria-hidden="true">🔎</div>
+        <h2 class="victory-title">Das Detektivbüro der Zahlen — gerettet!</h2>
+        <p class="victory-text">
+          Alle fünf Akten sind rekonstruiert — das Detektivbüro der Zahlen ist gerettet! Du hast bewiesen, dass du die Sprache der Tabellenkalkulation verstehst: von der Zelladresse bis zur Fehlermeldung. Ab sofort bist du offiziell Detektiv:in im Dienst der Daten!
+        </p>
+        <div class="victory-reflection">
+          <div class="victory-reflection-label">Reflexionsfrage</div>
+          <p class="victory-reflection-text">
+            Welcher Fehler aus Akte 5 könnte dir selbst beim nächsten Arbeiten mit einer Tabelle passieren — und was würdest du dann als erstes prüfen?
+          </p>
+        </div>
+        <button class="btn-restart" onclick="restartGame()">Nochmal spielen</button>
+      </div>
+
+    </div><!-- /#view-hub -->
+
+    <!-- ===== PUZZLE VIEW ===== -->
+    <div id="view-puzzle">
+
+      <button class="btn-back" onclick="showHub()" aria-label="Zurück zur Akten-Übersicht">
+        ← Zurück zur Übersicht
+      </button>
+
+      <!-- ==================== AKTE 01 ==================== -->
+      <article
+        class="puzzle-card"
+        id="puzzle-card-1"
+        aria-label="Akte 1: Das verschwundene Koordinatensystem"
+        style="display:none"
+      >
+        <div class="puzzle-number" aria-hidden="true">AKTE 01 · ERINNERN</div>
+        <h2 class="puzzle-title" tabindex="-1">Das verschwundene Koordinatensystem</h2>
+
+        <!-- Text Ebene A -->
+        <div class="puzzle-text text-a" aria-label="Aufgabentext Regelkurs">
+          <p>In der Akte liegt ein zerrissenes Schulungsblatt. Du kannst noch lesen:</p>
+          <p>Eine Tabellenkalkulation ist wie ein riesiges Gitter aus Kästchen. Die waagerechten Reihen heißen <strong>Zeilen</strong> — sie sind mit Zahlen nummeriert: 1, 2, 3 und so weiter. Die senkrechten Reihen heißen <strong>Spalten</strong> — sie tragen Buchstaben: A, B, C und so weiter. Jedes einzelne Kästchen in diesem Gitter heißt <strong>Zelle</strong>. Jede Zelle hat eine eigene Adresse: zuerst den Spaltenbuchstaben, dann die Zeilennummer. Die Zelle in Spalte B, Zeile 3 heißt also B3.</p>
+          <p>Der Täter hat das wichtigste Wort gelöscht — den Begriff für das gesamte gleichmäßige Gitter aus Zeilen und Spalten.</p>
+        </div>
+
+        <!-- Text Ebene B -->
+        <div class="puzzle-text text-b" aria-label="Aufgabentext Einfache Sprache">
+          <p>Du findest einen alten Zettel. Er zeigt ein Gitter aus Kästchen. Waagerechte Reihen heißen Zeilen. Senkrechte Reihen heißen Spalten. Zusammen bilden sie ein Muster. Dieses Muster hat einen Namen.</p>
+        </div>
+
+        <button
+          class="btn-speak"
+          id="speak-btn-1"
+          aria-label="Aufgabentext vorlesen"
+          aria-pressed="false"
+          onclick="toggleSpeak(1)"
+        >🔊 Vorlesen</button>
+
+        <p class="puzzle-task">
+          <span class="text-a">Welches Wort beschreibt die Struktur aus Zeilen und Spalten einer Tabelle? Schreibe das Wort in Großbuchstaben.</span>
+          <span class="text-b">Wie heißt das gleichmäßige Muster aus Reihen? Schreib das Wort in Großbuchstaben.</span>
+        </p>
+
+        <div class="answer-area">
+          <input
+            type="text"
+            class="answer-input"
+            id="input-1"
+            aria-label="Deine Antwort für Akte 1"
+            aria-describedby="feedback-1"
+            placeholder="Antwort eingeben …"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <button
+            class="btn-primary"
+            id="btn-check-1"
+            aria-label="Antwort für Akte 1 prüfen"
+            onclick="checkAnswer(1)"
+          >Prüfen</button>
+        </div>
+
+        <div id="feedback-1" class="feedback-message" aria-live="polite" role="status"></div>
+
+        <div class="hint-buttons" role="group" aria-label="Tipps für Akte 1">
+          <button
+            class="btn-hint"
+            id="btn-hint-1-1"
+            aria-label="Tipp 1 für Akte 1 anzeigen"
+            onclick="showHint(1, 1)"
+          >💡 Tipp 1</button>
+          <button
+            class="btn-hint"
+            id="btn-hint-1-2"
+            aria-label="Tipp 2 für Akte 1 anzeigen"
+            onclick="showHint(1, 2)"
+            style="display:none"
+          >💡 Tipp 2</button>
+        </div>
+
+        <div id="hint-box-1-1" role="note" aria-label="Tipp 1 für Akte 1" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 1</div>
+            <p class="hint-text text-a">Schau dir das Wort „Gitter" genau an. Gibt es ein anderes deutsches Wort für ein gleichmäßiges Gitter — vielleicht vom Millimeterpapier?</p>
+            <p class="hint-text text-b">Schau dir das Wort „Gitter" genau an. Gibt es ein anderes deutsches Wort für ein gleichmäßiges Gitter — vielleicht vom Millimeterpapier?</p>
+          </div>
+        </div>
+
+        <div id="hint-box-1-2" role="note" aria-label="Tipp 2 für Akte 1" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 2</div>
+            <p class="hint-text text-a">Das Wort hat 6 Buchstaben und beginnt mit „RA". Es endet auf „ER". Du kennst es vielleicht vom Ausdruck „im ___-Format drucken".</p>
+            <p class="hint-text text-b">Das Wort hat 6 Buchstaben und beginnt mit „RA". Es endet auf „ER". Du kennst es vielleicht vom Ausdruck „im ___-Format drucken".</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ==================== AKTE 02 ==================== -->
+      <article
+        class="puzzle-card"
+        id="puzzle-card-2"
+        aria-label="Akte 2: Der stumme Zeuge"
+        style="display:none"
+      >
+        <div class="puzzle-number" aria-hidden="true">AKTE 02 · ERINNERN / VERSTEHEN</div>
+        <h2 class="puzzle-title" tabindex="-1">Der stumme Zeuge</h2>
+
+        <!-- Text Ebene A -->
+        <div class="puzzle-text text-a" aria-label="Aufgabentext Regelkurs">
+          <p>In der zweiten Akte liegt ein halbverbranntes Lehrbuch. Ein Absatz ist noch lesbar:</p>
+          <p>In einer Tabellenkalkulation kann jede Zelle verschiedene Dinge enthalten. Entweder steht dort ein fester Inhalt — eine Zahl oder ein Text, der sich nicht von selbst verändert. Oder die Zelle enthält eine <strong>Formel</strong>, die mit „=" beginnt. Formeln berechnen sich automatisch neu, sobald sich andere Zellen verändern. In der <strong>Formelleiste</strong> oben siehst du immer, was wirklich in einer Zelle steckt. Die Zelle selbst zeigt nur das fertige Ergebnis.</p>
+          <p>Das fehlende Schlüsselwort: der Begriff für den festen Inhalt einer Zelle — eine Zahl oder ein Text, der sich nicht automatisch ändert.</p>
+        </div>
+
+        <!-- Text Ebene B -->
+        <div class="puzzle-text text-b" aria-label="Aufgabentext Einfache Sprache">
+          <p>Eine Zelle kann zwei Dinge haben. Entweder eine feste Zahl oder ein festes Wort. Oder eine Formel — die rechnet selbst. Eine feste Zahl ändert sich nicht. Du gibst sie ein — und sie bleibt.</p>
+        </div>
+
+        <button
+          class="btn-speak"
+          id="speak-btn-2"
+          aria-label="Aufgabentext vorlesen"
+          aria-pressed="false"
+          onclick="toggleSpeak(2)"
+        >🔊 Vorlesen</button>
+
+        <p class="puzzle-task">
+          <span class="text-a">Wie nennt man den festen Inhalt einer Zelle — eine Zahl oder Text, der sich nicht automatisch ändert? Schreibe das Wort in Großbuchstaben.</span>
+          <span class="text-b">Wie heißt eine feste Zahl oder ein festes Wort in einer Zelle? Schreib das Wort in Großbuchstaben.</span>
+        </p>
+
+        <div class="answer-area">
+          <input
+            type="text"
+            class="answer-input"
+            id="input-2"
+            aria-label="Deine Antwort für Akte 2"
+            aria-describedby="feedback-2"
+            placeholder="Antwort eingeben …"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <button
+            class="btn-primary"
+            id="btn-check-2"
+            aria-label="Antwort für Akte 2 prüfen"
+            onclick="checkAnswer(2)"
+          >Prüfen</button>
+        </div>
+
+        <div id="feedback-2" class="feedback-message" aria-live="polite" role="status"></div>
+
+        <div class="hint-buttons" role="group" aria-label="Tipps für Akte 2">
+          <button
+            class="btn-hint"
+            id="btn-hint-2-1"
+            aria-label="Tipp 1 für Akte 2 anzeigen"
+            onclick="showHint(2, 1)"
+          >💡 Tipp 1</button>
+          <button
+            class="btn-hint"
+            id="btn-hint-2-2"
+            aria-label="Tipp 2 für Akte 2 anzeigen"
+            onclick="showHint(2, 2)"
+            style="display:none"
+          >💡 Tipp 2</button>
+        </div>
+
+        <div id="hint-box-2-1" role="note" aria-label="Tipp 1 für Akte 2" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 1</div>
+            <p class="hint-text text-a">Denk an den Satz: „Diese Zahl hat einen hohen ___." Das gesuchte Wort benutzen wir im Alltag für Zahlen und Mengen.</p>
+            <p class="hint-text text-b">Denk an den Satz: „Diese Zahl hat einen hohen ___." Das gesuchte Wort benutzen wir im Alltag für Zahlen und Mengen.</p>
+          </div>
+        </div>
+
+        <div id="hint-box-2-2" role="note" aria-label="Tipp 2 für Akte 2" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 2</div>
+            <p class="hint-text text-a">Das Wort hat 4 Buchstaben und beginnt mit „W". Es ist das Gegenteil von einer Formel. Eine feste Zahl — das ist ein ___.</p>
+            <p class="hint-text text-b">Das Wort hat 4 Buchstaben und beginnt mit „W". Es ist das Gegenteil von einer Formel. Eine feste Zahl — das ist ein ___.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ==================== AKTE 03 ==================== -->
+      <article
+        class="puzzle-card"
+        id="puzzle-card-3"
+        aria-label="Akte 3: Das Startsignal"
+        style="display:none"
+      >
+        <div class="puzzle-number" aria-hidden="true">AKTE 03 · VERSTEHEN / ANWENDEN</div>
+        <h2 class="puzzle-title" tabindex="-1">Das Startsignal</h2>
+
+        <!-- Text Ebene A -->
+        <div class="puzzle-text text-a" aria-label="Aufgabentext Regelkurs">
+          <p>In der dritten Akte steckt ein Notizzettel des Büroleiters:</p>
+          <p>Wer in einer Tabellenkalkulation rechnen will, muss wissen: Jede Formel beginnt immer mit einem ganz bestimmten Zeichen. Dieses Zeichen ist das Signal an das Programm: „Jetzt kommt eine Berechnung!" Ohne dieses Startsignal behandelt die Tabelle alles als normalen Text. Zum Beispiel: Wenn du <code>3+5</code> eingibst, schreibt die Tabelle den Text <code>3+5</code> hin. Aber wenn du das richtige Zeichen davor setzt — <code>=3+5</code> — dann rechnet die Tabelle und zeigt <code>8</code>. Das Zeichen steht ganz am Anfang, vor jeder Formel.</p>
+          <p>Das gesuchte Wort beschreibt, was dieses Zeichen für eine Formel bedeutet: Es ist ihr Beginn, ihr Signal, ihr ___.</p>
+        </div>
+
+        <!-- Text Ebene B -->
+        <div class="puzzle-text text-b" aria-label="Aufgabentext Einfache Sprache">
+          <p>Eine Formel braucht ein Startzeichen. Ohne es passiert nichts. Das Zeichen sagt: „Jetzt rechnen!" Ein Rennen beginnt mit einem Startsignal. Eine Formel beginnt genauso. Ohne Signal — kein Rennen. Ohne Zeichen — keine Formel.</p>
+        </div>
+
+        <button
+          class="btn-speak"
+          id="speak-btn-3"
+          aria-label="Aufgabentext vorlesen"
+          aria-pressed="false"
+          onclick="toggleSpeak(3)"
+        >🔊 Vorlesen</button>
+
+        <p class="puzzle-task">
+          <span class="text-a">Wie nennt man den Beginn oder das Auslösesignal einer Formel — die Funktion, die das „=" übernimmt? Schreibe das Wort in Großbuchstaben (5 Buchstaben).</span>
+          <span class="text-b">Wie heißt das Signal, das eine Formel beginnt? Schreib das Wort in Großbuchstaben (5 Buchstaben).</span>
+        </p>
+
+        <div class="answer-area">
+          <input
+            type="text"
+            class="answer-input"
+            id="input-3"
+            aria-label="Deine Antwort für Akte 3"
+            aria-describedby="feedback-3"
+            placeholder="Antwort eingeben …"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <button
+            class="btn-primary"
+            id="btn-check-3"
+            aria-label="Antwort für Akte 3 prüfen"
+            onclick="checkAnswer(3)"
+          >Prüfen</button>
+        </div>
+
+        <div id="feedback-3" class="feedback-message" aria-live="polite" role="status"></div>
+
+        <div class="hint-buttons" role="group" aria-label="Tipps für Akte 3">
+          <button
+            class="btn-hint"
+            id="btn-hint-3-1"
+            aria-label="Tipp 1 für Akte 3 anzeigen"
+            onclick="showHint(3, 1)"
+          >💡 Tipp 1</button>
+          <button
+            class="btn-hint"
+            id="btn-hint-3-2"
+            aria-label="Tipp 2 für Akte 3 anzeigen"
+            onclick="showHint(3, 2)"
+            style="display:none"
+          >💡 Tipp 2</button>
+        </div>
+
+        <div id="hint-box-3-1" role="note" aria-label="Tipp 1 für Akte 3" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 1</div>
+            <p class="hint-text text-a">Denk an ein Rennen. Was passiert bevor es losgeht? Es gibt ein Signal — einen ___. Genauso funktioniert „=" in einer Formel.</p>
+            <p class="hint-text text-b">Denk an ein Rennen. Was passiert bevor es losgeht? Es gibt ein Signal — einen ___. Genauso funktioniert „=" in einer Formel.</p>
+          </div>
+        </div>
+
+        <div id="hint-box-3-2" role="note" aria-label="Tipp 2 für Akte 3" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 2</div>
+            <p class="hint-text text-a">Das Wort hat 5 Buchstaben und beginnt mit „ST". Im Rennsport ruft man es vor der grünen Ampel. In der Tabelle ist „=" der ___ einer Formel.</p>
+            <p class="hint-text text-b">Das Wort hat 5 Buchstaben und beginnt mit „ST". Im Rennsport ruft man es vor der grünen Ampel. In der Tabelle ist „=" der ___ einer Formel.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ==================== AKTE 04 ==================== -->
+      <article
+        class="puzzle-card"
+        id="puzzle-card-4"
+        aria-label="Akte 4: Die magische Formel"
+        style="display:none"
+      >
+        <div class="puzzle-number" aria-hidden="true">AKTE 04 · ANWENDEN</div>
+        <h2 class="puzzle-title" tabindex="-1">Die magische Formel</h2>
+
+        <!-- Text Ebene A -->
+        <div class="puzzle-text text-a" aria-label="Aufgabentext Regelkurs">
+          <p>In der vierten Akte liegt ein ausgedrucktes Tabellenblatt:</p>
+          <p>Im Detektivbüro werden Ausgaben erfasst. In den Zellen A1 bis A5 stehen die Beträge der letzten fünf Tage: 3, 7, 2, 8, 5. Der Büroassistent möchte alle fünf Zahlen zusammenrechnen. Statt <code>=A1+A2+A3+A4+A5</code> zu tippen, benutzt er eine kürzere Schreibweise. Diese Funktion kann viele Zahlen auf einmal addieren. Man schreibt den Funktionsnamen, dann eine Klammer, dann die erste Zelladresse, einen Doppelpunkt, die letzte Zelladresse und eine schließende Klammer. Der Doppelpunkt bedeutet: „von hier bis dort". Das Ergebnis für A1 bis A5 ist: 3+7+2+8+5 = <strong>25</strong>.</p>
+          <p>Das fehlende Schlüsselwort: der Name dieser Funktion.</p>
+        </div>
+
+        <!-- Text Ebene B -->
+        <div class="puzzle-text text-b" aria-label="Aufgabentext Einfache Sprache">
+          <p>Im Büro stehen 5 Zahlen: 3, 7, 2, 8, 5. Du willst alle zusammenzählen. Das ist mühsam. Die Tabelle kann das für dich tun. Es gibt eine Funktion dafür. Sie heißt genau das, was sie tut: Sie rechnet alles zusammen.</p>
+        </div>
+
+        <button
+          class="btn-speak"
+          id="speak-btn-4"
+          aria-label="Aufgabentext vorlesen"
+          aria-pressed="false"
+          onclick="toggleSpeak(4)"
+        >🔊 Vorlesen</button>
+
+        <p class="puzzle-task">
+          <span class="text-a">Wie heißt die Funktion, die viele Zahlen auf einmal zusammenrechnet? Schreibe den Funktionsnamen in Großbuchstaben (5 Buchstaben).</span>
+          <span class="text-b">Wie heißt die Funktion, die alle Zahlen zusammenzählt? Schreib das Wort in Großbuchstaben (5 Buchstaben).</span>
+        </p>
+
+        <div class="answer-area">
+          <input
+            type="text"
+            class="answer-input"
+            id="input-4"
+            aria-label="Deine Antwort für Akte 4"
+            aria-describedby="feedback-4"
+            placeholder="Antwort eingeben …"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <button
+            class="btn-primary"
+            id="btn-check-4"
+            aria-label="Antwort für Akte 4 prüfen"
+            onclick="checkAnswer(4)"
+          >Prüfen</button>
+        </div>
+
+        <div id="feedback-4" class="feedback-message" aria-live="polite" role="status"></div>
+
+        <div class="hint-buttons" role="group" aria-label="Tipps für Akte 4">
+          <button
+            class="btn-hint"
+            id="btn-hint-4-1"
+            aria-label="Tipp 1 für Akte 4 anzeigen"
+            onclick="showHint(4, 1)"
+          >💡 Tipp 1</button>
+          <button
+            class="btn-hint"
+            id="btn-hint-4-2"
+            aria-label="Tipp 2 für Akte 4 anzeigen"
+            onclick="showHint(4, 2)"
+            style="display:none"
+          >💡 Tipp 2</button>
+        </div>
+
+        <div id="hint-box-4-1" role="note" aria-label="Tipp 1 für Akte 4" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 1</div>
+            <p class="hint-text text-a">Wenn du mehrere Zahlen zusammenzählst — wie heißt das Ergebnis? Dieses Wort benutzt du auch im Matheunterricht: „Die ___ aller Zahlen ist …"</p>
+            <p class="hint-text text-b">Wenn du mehrere Zahlen zusammenzählst — wie heißt das Ergebnis? Dieses Wort benutzt du auch im Matheunterricht: „Die ___ aller Zahlen ist …"</p>
+          </div>
+        </div>
+
+        <div id="hint-box-4-2" role="note" aria-label="Tipp 2 für Akte 4" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 2</div>
+            <p class="hint-text text-a">Das Wort hat 5 Buchstaben und beginnt mit „SU". Du kennst es: „Die ___ ist 25." In der Tabelle heißt die Funktion genauso.</p>
+            <p class="hint-text text-b">Das Wort hat 5 Buchstaben und beginnt mit „SU". Du kennst es: „Die ___ ist 25." In der Tabelle heißt die Funktion genauso.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ==================== AKTE 05 ==================== -->
+      <article
+        class="puzzle-card"
+        id="puzzle-card-5"
+        aria-label="Akte 5: Der sabotierte Bericht"
+        style="display:none"
+      >
+        <div class="puzzle-number" aria-hidden="true">AKTE 05 · ANWENDEN / ANALYSIEREN</div>
+        <h2 class="puzzle-title" tabindex="-1">Der sabotierte Bericht</h2>
+
+        <!-- Text Ebene A -->
+        <div class="puzzle-text text-a" aria-label="Aufgabentext Regelkurs">
+          <p>Die letzte Akte zeigt einen Tabellenausdruck voller roter Meldungen. Eine Notiz erklärt:</p>
+          <p><code>#NAME?</code> erscheint, wenn du einen Funktionsnamen falsch geschrieben hast — zum Beispiel SUMME als SUMEM. <code>#DIV/0!</code> erscheint, wenn du durch null geteilt hast — das ist mathematisch verboten. <code>#WERT!</code> erscheint, wenn du mit einer Zelle rechnest, in der Text statt einer Zahl steht. <code>#BEZUG!</code> erscheint, wenn eine Zelladresse nicht mehr existiert.</p>
+          <p>Der häufigste Anfängerfehler zeigt gar keinen Code: Vergisst man das „=" am Anfang, zeigt die Tabelle die Formel als Text — statt sie zu berechnen.</p>
+          <p>Du sollst den Oberbegriff für alle diese Probleme benennen.</p>
+        </div>
+
+        <!-- Text Ebene B -->
+        <div class="puzzle-text text-b" aria-label="Aufgabentext Einfache Sprache">
+          <p>Die Tabelle zeigt rote Zeichen. Etwas stimmt nicht. Vielleicht ein Tippfehler. Vielleicht eine falsche Zahl. Das Programm kann nicht rechnen. Es zeigt ein Zeichen: Etwas ist schiefgelaufen.</p>
+        </div>
+
+        <button
+          class="btn-speak"
+          id="speak-btn-5"
+          aria-label="Aufgabentext vorlesen"
+          aria-pressed="false"
+          onclick="toggleSpeak(5)"
+        >🔊 Vorlesen</button>
+
+        <p class="puzzle-task">
+          <span class="text-a">Wie nennt man in der Informatik einen Programmier- oder Formelfehler — wenn etwas nicht funktioniert wie geplant? Schreibe den Oberbegriff in Großbuchstaben (6 Buchstaben).</span>
+          <span class="text-b">Wie heißt es, wenn in der Tabelle etwas nicht klappt? Schreib das Wort in Großbuchstaben (6 Buchstaben).</span>
+        </p>
+
+        <div class="answer-area">
+          <input
+            type="text"
+            class="answer-input"
+            id="input-5"
+            aria-label="Deine Antwort für Akte 5"
+            aria-describedby="feedback-5"
+            placeholder="Antwort eingeben …"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <button
+            class="btn-primary"
+            id="btn-check-5"
+            aria-label="Antwort für Akte 5 prüfen"
+            onclick="checkAnswer(5)"
+          >Prüfen</button>
+        </div>
+
+        <div id="feedback-5" class="feedback-message" aria-live="polite" role="status"></div>
+
+        <div class="hint-buttons" role="group" aria-label="Tipps für Akte 5">
+          <button
+            class="btn-hint"
+            id="btn-hint-5-1"
+            aria-label="Tipp 1 für Akte 5 anzeigen"
+            onclick="showHint(5, 1)"
+          >💡 Tipp 1</button>
+          <button
+            class="btn-hint"
+            id="btn-hint-5-2"
+            aria-label="Tipp 2 für Akte 5 anzeigen"
+            onclick="showHint(5, 2)"
+            style="display:none"
+          >💡 Tipp 2</button>
+        </div>
+
+        <div id="hint-box-5-1" role="note" aria-label="Tipp 1 für Akte 5" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 1</div>
+            <p class="hint-text text-a">Alle roten Zeichen haben etwas gemeinsam: Sie zeigen an, dass etwas nicht funktioniert hat. Wie nennt man das im Alltag, wenn etwas schiefläuft?</p>
+            <p class="hint-text text-b">Alle roten Zeichen haben etwas gemeinsam: Sie zeigen an, dass etwas nicht funktioniert hat. Wie nennt man das im Alltag, wenn etwas schiefläuft?</p>
+          </div>
+        </div>
+
+        <div id="hint-box-5-2" role="note" aria-label="Tipp 2 für Akte 5" style="display:none">
+          <div class="hint-box">
+            <div class="hint-label">💡 Tipp 2</div>
+            <p class="hint-text text-a">Das Wort hat 6 Buchstaben und beginnt mit „FE". Im Computer erscheint dann eine ___-Meldung.</p>
+            <p class="hint-text text-b">Das Wort hat 6 Buchstaben und beginnt mit „FE". Im Computer erscheint dann eine ___-Meldung.</p>
+          </div>
+        </div>
+      </article>
+
+    </div><!-- /#view-puzzle -->
+
+  </main>
+
+  <script>
+    // ===== VORLESEFUNKTION (Text-to-Speech) =====
+    var currentUtterance = null;
+    var currentSpeakPuzzle = null;
+
+    function speakText(text, puzzleNum) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+
+      // Chrome-Bug: cancel() und speak() dürfen nicht synchron aufgerufen werden
+      setTimeout(function() {
+        var utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        currentUtterance = utterance;
+        currentSpeakPuzzle = puzzleNum;
+
+        utterance.onend = function() { resetSpeakButton(puzzleNum); currentSpeakPuzzle = null; };
+        utterance.onerror = function() { resetSpeakButton(puzzleNum); currentSpeakPuzzle = null; };
+
+        window.speechSynthesis.speak(utterance);
+      }, 50);
+    }
+
+    function stopSpeaking() {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      if (currentSpeakPuzzle !== null) {
+        resetSpeakButton(currentSpeakPuzzle);
+        currentSpeakPuzzle = null;
+      }
+    }
+
+    function resetSpeakButton(puzzleNum) {
+      var btn = document.getElementById('speak-btn-' + puzzleNum);
+      if (btn) {
+        btn.textContent = '🔊 Vorlesen';
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', 'Aufgabentext vorlesen');
+      }
+    }
+
+    function toggleSpeak(puzzleNum) {
+      if (!window.speechSynthesis) return;
+      var btn = document.getElementById('speak-btn-' + puzzleNum);
+      var isPlaying = btn && btn.getAttribute('aria-pressed') === 'true';
+
+      if (isPlaying) {
+        stopSpeaking();
+      } else {
+        // Laufende Ausgabe anderer Rätsel stoppen
+        if (currentSpeakPuzzle !== null && currentSpeakPuzzle !== puzzleNum) {
+          resetSpeakButton(currentSpeakPuzzle);
+        }
+        // Text aus aktivem Level holen
+        var card = document.getElementById('puzzle-card-' + puzzleNum);
+        if (!card) return;
+        var levelClass = document.body.classList.contains('level-b') ? 'text-b' : 'text-a';
+        var parts = [];
+        var textEl = card.querySelector('.puzzle-text.' + levelClass);
+        if (textEl) parts.push(textEl.textContent);
+        var taskSpan = card.querySelector('.puzzle-task span.' + levelClass);
+        if (taskSpan) parts.push(taskSpan.textContent);
+        var textContent = parts.join(' ').replace(/\s+/g, ' ').trim();
+
+        if (btn) {
+          btn.textContent = '⏹ Stop';
+          btn.setAttribute('aria-pressed', 'true');
+          btn.setAttribute('aria-label', 'Vorlesen stoppen');
+        }
+        speakText(textContent, puzzleNum);
+      }
+    }
+
+    // ===== SPIELZUSTAND =====
+    var gameState = {
+      solvedPuzzles: [],
+      currentPuzzle: null,
+      currentLevel: 'a',
+      soundEnabled: true,
+      errorCount: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      hintsUsed: { 1: [], 2: [], 3: [], 4: [], 5: [] }
+    };
+
+    // ===== LÖSUNGEN =====
+    var SOLUTIONS = { 1: 'RASTER', 2: 'WERT', 3: 'START', 4: 'SUMME', 5: 'FEHLER' };
+
+    // ===== AKTEN-TITEL =====
+    var PUZZLE_TITLES = {
+      1: 'Das verschwundene Koordinatensystem',
+      2: 'Der stumme Zeuge',
+      3: 'Das Startsignal',
+      4: 'Die magische Formel',
+      5: 'Der sabotierte Bericht'
+    };
+
+    // ===== FEHLERMELDUNGEN =====
+    var ERROR_MESSAGES = [
+      'Fast! Schau noch einmal genau hin.',
+      'Du bist auf dem richtigen Weg.',
+      'Noch nicht ganz — vielleicht hilft ein Tipp?',
+      'Nicht ganz — der Schlüssel steckt im Aufgabentext.',
+      'Probier es nochmal — du schaffst das!'
+    ];
+
+    // ===== HUB-NAVIGATION =====
+    function updateHubCards() {
+      for (var i = 1; i <= 5; i++) {
+        var card = document.getElementById('hub-card-' + i);
+        var status = document.getElementById('hub-status-' + i);
+        if (!card || !status) continue;
+        var solved = gameState.solvedPuzzles.indexOf(i) !== -1;
+        if (solved) {
+          card.classList.add('solved');
+          status.textContent = '✓ Akte rekonstruiert';
+          card.setAttribute('aria-label', 'Akte ' + i + ': ' + PUZZLE_TITLES[i] + ' – gelöst');
+        } else {
+          card.classList.remove('solved');
+          status.textContent = 'Akte öffnen →';
+          card.setAttribute('aria-label', 'Akte ' + i + ': ' + PUZZLE_TITLES[i] + ' – offen');
+        }
+      }
+    }
+
+    function showHub() {
+      stopSpeaking();
+      document.getElementById('view-hub').style.display = 'block';
+      document.getElementById('view-puzzle').style.display = 'none';
+      updateHubCards();
+      // Fokus auf ersten nicht-gelösten Hub-Card
+      for (var i = 1; i <= 5; i++) {
+        if (gameState.solvedPuzzles.indexOf(i) === -1) {
+          var card = document.getElementById('hub-card-' + i);
+          if (card) { card.focus(); break; }
+        }
+      }
+    }
+
+    function showPuzzle(puzzleNum) {
+      stopSpeaking();
+      gameState.currentPuzzle = puzzleNum;
+      document.getElementById('view-hub').style.display = 'none';
+      document.getElementById('view-puzzle').style.display = 'block';
+      // Nur das gewählte Rätsel zeigen
+      for (var i = 1; i <= 5; i++) {
+        var article = document.getElementById('puzzle-card-' + i);
+        if (article) article.style.display = (i === puzzleNum) ? '' : 'none';
+      }
+      // Fokus auf Rätsel-Überschrift
+      var heading = document.querySelector('#puzzle-card-' + puzzleNum + ' .puzzle-title');
+      if (heading) heading.focus();
+    }
+
+    // ===== EBENEN-TOGGLE =====
+    function setLevel(level) {
+      gameState.currentLevel = level;
+      document.body.classList.remove('level-a', 'level-b');
+      document.body.classList.add('level-' + level);
+
+      var btnA = document.getElementById('btn-level-a');
+      var btnB = document.getElementById('btn-level-b');
+
+      if (level === 'a') {
+        btnA.classList.add('active');
+        btnB.classList.remove('active');
+        btnA.setAttribute('aria-pressed', 'true');
+        btnB.setAttribute('aria-pressed', 'false');
+      } else {
+        btnB.classList.add('active');
+        btnA.classList.remove('active');
+        btnB.setAttribute('aria-pressed', 'true');
+        btnA.setAttribute('aria-pressed', 'false');
+      }
+
+      saveState();
+    }
+
+    // ===== SOUND =====
+    function playSuccess() {
+      if (!gameState.soundEnabled) return;
+      try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.30);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.7);
+      } catch (e) {
+        // Web Audio API nicht verfügbar — still weitermachen
+      }
+    }
+
+    function toggleSound() {
+      gameState.soundEnabled = !gameState.soundEnabled;
+      var btn = document.getElementById('btn-sound');
+      if (gameState.soundEnabled) {
+        btn.textContent = '🔊 Ton an';
+        btn.setAttribute('aria-pressed', 'true');
+        btn.setAttribute('aria-label', 'Ton: eingeschaltet. Klicken zum Stummschalten.');
+      } else {
+        btn.textContent = '🔇 Ton aus';
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', 'Ton: ausgeschaltet. Klicken zum Einschalten.');
+      }
+      saveState();
+    }
+
+    // ===== ANTWORT PRÜFEN =====
+    function checkAnswer(puzzleNum) {
+      if (gameState.solvedPuzzles.indexOf(puzzleNum) !== -1) return;
+
+      var input = document.getElementById('input-' + puzzleNum);
+      var feedback = document.getElementById('feedback-' + puzzleNum);
+      var correct = SOLUTIONS[puzzleNum];
+      var userAnswer = input.value;
+
+      if (userAnswer.trim() === '') {
+        feedback.textContent = 'Bitte gib eine Antwort ein.';
+        feedback.className = 'feedback-message error';
+        input.focus();
+        return;
+      }
+
+      if (userAnswer.trim().toLowerCase() === correct.toLowerCase()) {
+        // RICHTIG
+        markSolved(puzzleNum, false);
+      } else {
+        // FALSCH
+        gameState.errorCount[puzzleNum]++;
+        var msgIndex = (gameState.errorCount[puzzleNum] - 1) % ERROR_MESSAGES.length;
+        feedback.textContent = ERROR_MESSAGES[msgIndex];
+        feedback.className = 'feedback-message error';
+
+        // Shake-Animation neu starten
+        input.classList.remove('incorrect');
+        void input.offsetWidth; // Reflow erzwingen
+        input.classList.add('incorrect');
+
+        setTimeout(function() {
+          input.classList.remove('incorrect');
+        }, 2000);
+
+        // Nach 2 Fehlversuchen Tipp 1 hervorheben
+        if (gameState.errorCount[puzzleNum] >= 2) {
+          var hint1Btn = document.getElementById('btn-hint-' + puzzleNum + '-1');
+          if (hint1Btn && !hint1Btn.disabled) {
+            hint1Btn.classList.add('hint-highlight');
+          }
+        }
+      }
+    }
+
+    // ===== RÄTSEL LÖSEN =====
+    function markSolved(puzzleNum, silent) {
+      if (gameState.solvedPuzzles.indexOf(puzzleNum) !== -1) return;
+      gameState.solvedPuzzles.push(puzzleNum);
+
+      var input = document.getElementById('input-' + puzzleNum);
+      var feedback = document.getElementById('feedback-' + puzzleNum);
+      var card = document.getElementById('puzzle-card-' + puzzleNum);
+
+      // Input deaktivieren und Lösung anzeigen
+      if (input) {
+        input.value = SOLUTIONS[puzzleNum];
+        input.classList.add('correct');
+        input.disabled = true;
+      }
+
+      // Prüfen-Button deaktivieren
+      var checkBtn = document.getElementById('btn-check-' + puzzleNum);
+      if (checkBtn) checkBtn.disabled = true;
+
+      // Tipp-Buttons deaktivieren
+      var hintBtn1 = document.getElementById('btn-hint-' + puzzleNum + '-1');
+      var hintBtn2 = document.getElementById('btn-hint-' + puzzleNum + '-2');
+      if (hintBtn1) { hintBtn1.disabled = true; hintBtn1.classList.remove('hint-highlight'); }
+      if (hintBtn2) hintBtn2.disabled = true;
+
+      // Erfolgsmeldung
+      if (feedback) {
+        feedback.textContent = 'Richtig! Akte ' + puzzleNum + ' erfolgreich rekonstruiert!';
+        feedback.className = 'feedback-message success';
+      }
+
+      // Karte als gelöst markieren
+      if (card) {
+        card.classList.add('solved', 'just-solved');
+        setTimeout(function() { card.classList.remove('just-solved'); }, 1000);
+        card.setAttribute('aria-label', 'Akte ' + puzzleNum + ': ' + PUZZLE_TITLES[puzzleNum] + ' – gelöst');
+      }
+
+      // Spielstand speichern
+      saveState();
+
+      // Sound abspielen (nicht beim Laden)
+      if (!silent) playSuccess();
+
+      // Fortschritt aktualisieren
+      updateProgress();
+      updateHubCards();
+
+      // Sieg prüfen
+      if (gameState.solvedPuzzles.length === 5) {
+        setTimeout(showVictory, 800);
+      }
+    }
+
+    // ===== FORTSCHRITT AKTUALISIEREN =====
+    function updateProgress() {
+      var count = gameState.solvedPuzzles.length;
+      var progressText = document.getElementById('progress-text');
+      var progressFill = document.getElementById('progress-fill');
+      var progressBar = progressFill ? progressFill.parentElement : null;
+
+      if (progressText) {
+        progressText.textContent = '🔍 ' + count + ' von 5 Akten rekonstruiert';
+      }
+
+      var percent = (count / 5) * 100;
+      if (progressFill) {
+        progressFill.style.width = percent + '%';
+      }
+
+      if (progressBar) {
+        progressBar.setAttribute('aria-valuenow', count);
+        progressBar.setAttribute('aria-label', 'Fortschrittsbalken: ' + count + ' von 5 Akten gelöst');
+      }
+    }
+
+    // ===== TIPP ANZEIGEN =====
+    function showHint(puzzleNum, hintNum) {
+      var hintBox = document.getElementById('hint-box-' + puzzleNum + '-' + hintNum);
+      var hintBtn = document.getElementById('btn-hint-' + puzzleNum + '-' + hintNum);
+
+      if (!hintBox) return;
+
+      hintBox.style.display = 'block';
+
+      if (gameState.hintsUsed[puzzleNum].indexOf(hintNum) === -1) {
+        gameState.hintsUsed[puzzleNum].push(hintNum);
+      }
+
+      // Button deaktivieren
+      if (hintBtn) {
+        hintBtn.disabled = true;
+        hintBtn.classList.remove('hint-highlight');
+        hintBtn.setAttribute('aria-label', 'Tipp ' + hintNum + ' für Akte ' + puzzleNum + ' (bereits angezeigt)');
+      }
+
+      // Tipp 2 freischalten nach Klick auf Tipp 1
+      if (hintNum === 1) {
+        var hint2Btn = document.getElementById('btn-hint-' + puzzleNum + '-2');
+        if (hint2Btn) {
+          hint2Btn.style.display = 'inline-block';
+        }
+      }
+    }
+
+    // ===== SIEG-BILDSCHIRM =====
+    function showVictory() {
+      var victoryScreen = document.getElementById('victory-screen');
+      if (!victoryScreen) return;
+
+      // Zum Hub wechseln und Sieg dort zeigen
+      document.getElementById('view-hub').style.display = 'block';
+      document.getElementById('view-puzzle').style.display = 'none';
+
+      // Hub-Grid ausblenden
+      var hubGrid = document.querySelector('.hub-grid');
+      if (hubGrid) hubGrid.style.display = 'none';
+
+      victoryScreen.classList.add('visible');
+      victoryScreen.focus();
+
+      // Finaler Sound (doppelt)
+      playSuccess();
+      setTimeout(playSuccess, 400);
+    }
+
+    // ===== NEUSTART =====
+    function restartGame() {
+      // State zurücksetzen
+      gameState.solvedPuzzles = [];
+      gameState.currentPuzzle = null;
+      gameState.errorCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      gameState.hintsUsed = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+
+      // localStorage löschen
+      try {
+        localStorage.removeItem('tabkalk_gameState');
+      } catch (e) { /* ignorieren */ }
+
+      // UI zurücksetzen
+      for (var i = 1; i <= 5; i++) {
+        var input = document.getElementById('input-' + i);
+        if (input) {
+          input.value = '';
+          input.disabled = false;
+          input.classList.remove('correct', 'incorrect');
+        }
+        var checkBtn = document.getElementById('btn-check-' + i);
+        if (checkBtn) checkBtn.disabled = false;
+
+        var hintBtn1 = document.getElementById('btn-hint-' + i + '-1');
+        var hintBtn2 = document.getElementById('btn-hint-' + i + '-2');
+        if (hintBtn1) { hintBtn1.disabled = false; hintBtn1.style.display = ''; hintBtn1.classList.remove('hint-highlight'); hintBtn1.setAttribute('aria-label', 'Tipp 1 für Akte ' + i + ' anzeigen'); }
+        if (hintBtn2) { hintBtn2.disabled = false; hintBtn2.style.display = 'none'; hintBtn2.setAttribute('aria-label', 'Tipp 2 für Akte ' + i + ' anzeigen'); }
+
+        var hintBox1 = document.getElementById('hint-box-' + i + '-1');
+        var hintBox2 = document.getElementById('hint-box-' + i + '-2');
+        if (hintBox1) hintBox1.style.display = 'none';
+        if (hintBox2) hintBox2.style.display = 'none';
+
+        var feedback = document.getElementById('feedback-' + i);
+        if (feedback) { feedback.textContent = ''; feedback.className = 'feedback-message'; }
+
+        var card = document.getElementById('puzzle-card-' + i);
+        if (card) card.classList.remove('solved', 'just-solved');
+      }
+
+      // Sieg ausblenden, Hub-Grid wieder zeigen
+      var victoryScreen = document.getElementById('victory-screen');
+      if (victoryScreen) victoryScreen.classList.remove('visible');
+
+      var hubGrid = document.querySelector('.hub-grid');
+      if (hubGrid) hubGrid.style.display = '';
+
+      updateProgress();
+      updateHubCards();
+
+      // Fokus auf ersten Hub-Card
+      var firstCard = document.getElementById('hub-card-1');
+      if (firstCard) firstCard.focus();
+    }
+
+    // ===== SPEICHERN =====
+    function saveState() {
+      try {
+        localStorage.setItem('tabkalk_gameState', JSON.stringify({
+          solvedPuzzles: gameState.solvedPuzzles,
+          currentLevel: gameState.currentLevel,
+          soundEnabled: gameState.soundEnabled
+        }));
+      } catch (e) { /* localStorage nicht verfügbar — ignorieren */ }
+    }
+
+    // ===== ENTER-TASTE =====
+    function handleEnterKey(event) {
+      if (event.key !== 'Enter') return;
+      var target = event.target;
+      if (!target || target.tagName !== 'INPUT') return;
+      var id = target.getAttribute('id');
+      if (!id || id.indexOf('input-') !== 0) return;
+      var puzzleNum = parseInt(id.replace('input-', ''), 10);
+      if (puzzleNum >= 1 && puzzleNum <= 5) {
+        checkAnswer(puzzleNum);
+      }
+    }
+
+    // ===== INITIALISIERUNG =====
+    document.addEventListener('DOMContentLoaded', function() {
+      // Enter-Taste registrieren
+      document.addEventListener('keydown', handleEnterKey);
+
+      // Alle Puzzle-Artikel initial verstecken
+      for (var i = 1; i <= 5; i++) {
+        var article = document.getElementById('puzzle-card-' + i);
+        if (article) article.style.display = 'none';
+      }
+
+      // Hub ist sichtbar
+      document.getElementById('view-hub').style.display = 'block';
+      document.getElementById('view-puzzle').style.display = 'none';
+
+      // Vorlesen-Buttons ausblenden wenn Web Speech API nicht verfügbar
+      if (!window.speechSynthesis) {
+        var speakBtns = document.querySelectorAll('.btn-speak');
+        for (var s = 0; s < speakBtns.length; s++) {
+          speakBtns[s].style.display = 'none';
+        }
+      }
+
+      // Gespeicherten Spielstand wiederherstellen
+      try {
+        var saved = localStorage.getItem('tabkalk_gameState');
+        if (saved) {
+          var s = JSON.parse(saved);
+          if (Array.isArray(s.solvedPuzzles)) {
+            s.solvedPuzzles.forEach(function(n) { markSolved(n, true); });
+          }
+          if (s.currentLevel === 'b') {
+            setLevel('b');
+          }
+          if (s.soundEnabled === false) {
+            gameState.soundEnabled = false;
+            var btn = document.getElementById('btn-sound');
+            if (btn) {
+              btn.textContent = '🔇 Ton aus';
+              btn.setAttribute('aria-pressed', 'false');
+              btn.setAttribute('aria-label', 'Ton: ausgeschaltet. Klicken zum Einschalten.');
+            }
+          }
+        }
+      } catch (e) { /* localStorage nicht verfügbar */ }
+
+      // Ebene A als Standard (falls kein gespeicherter Wert)
+      if (!document.body.classList.contains('level-b')) setLevel('a');
+
+      // Fortschritt initialisieren
+      updateProgress();
+      updateHubCards();
+    });
+  </script>
+</body>
+</html>
