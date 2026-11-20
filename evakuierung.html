@@ -383,7 +383,7 @@ function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("sh
 function tagChips(p){ return (p.tags||[]).filter(t=>TAG[t]).map(t=>`<span class="tag" style="--c:var(--t-${t})" title="${esc(TAG[t].label)}"><i aria-hidden="true">${TAG[t].icon}</i>${esc(TAG[t].label)}</span>`).join(""); }
 function classes(){ return [...new Set(S.people.map(p=>p.klasse||"ohne Klasse"))].sort(classSort); }
 function download(name, text, type="text/csv;charset=utf-8"){
-  const blob = new Blob([type.startsWith("text/csv")?"﻿"+text:text],{type});
+  const blob = new Blob([type.startsWith("text/csv")?"\uFEFF"+text:text],{type});
   const a = Object.assign(document.createElement("a"),{href:URL.createObjectURL(blob),download:name});
   document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
@@ -391,7 +391,7 @@ const csvCell = v => /[;"\n]/.test(String(v??"")) ? `"${String(v).replace(/"/g,'
 
 /* ================= CSV ================= */
 function parseCSV(text){
-  text = text.replace(/^﻿/,"");
+  text = text.replace(/^\uFEFF/,"");
   const first = text.split(/\r?\n/).find(l=>l.trim())||"";
   const delim = [";","\t",","].map(d=>[d,first.split(d).length]).sort((a,b)=>b[1]-a[1])[0][0];
   const rows=[]; let row=[], cell="", q=false;
@@ -409,7 +409,7 @@ function parseCSV(text){
 function readFileText(file){
   return new Promise(res=>{
     const r=new FileReader();
-    r.onload=()=>{ const t=r.result; if(t.includes("�")){ const r2=new FileReader(); r2.onload=()=>res(r2.result); r2.readAsText(file,"windows-1252"); } else res(t); };
+    r.onload=()=>{ const t=r.result; if(t.includes("\uFFFD")){ const r2=new FileReader(); r2.onload=()=>res(r2.result); r2.readAsText(file,"windows-1252"); } else res(t); };
     r.readAsText(file,"utf-8");
   });
 }
