@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0b5d6b" />
+<title>Evakuierung – Lebenshilfe Schule</title>
+<meta name="description" content="Evakuierungs-App: Präsenzliste, Hilfebedarf, Sammelplatz-Check-in und Raumfreigabe. Läuft offline, Daten bleiben auf dem Gerät." />
+<style>
+:root{
+  --bg:#f4f6f7; --surface:#ffffff; --surface-2:#eef2f3; --border:#d5dcdf;
+  --text:#14212b; --muted:#56656f;
+  --brand:#0b5d6b; --brand-ink:#ffffff; --brand-soft:#dcefF1;
+  --safe:#1d7a3e; --safe-bg:#dff3e5;
+  --miss:#c4161c; --miss-bg:#fde3e3;
+  --exc:#5b6670; --exc-bg:#e7eaec;
+  --warn:#9a5b00; --warn-bg:#fff1d6;
+  --radius:12px; --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.05);
+  /* Tag-Farben */
+  --t-rollstuhl:#1f5fbf; --t-hoeren:#7b3fb3; --t-sehen:#3a49a8; --t-therapie:#0f7f73;
+  --t-begleitung:#a35f00; --t-pflege:#b0306f; --t-medizin:#b5400b; --t-weglauf:#6b4a2b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1519; --surface:#172026; --surface-2:#1f2a31; --border:#2e3b43;
+    --text:#e8eef1; --muted:#9db0ba;
+    --brand:#3fb3c4; --brand-ink:#06181c; --brand-soft:#123a40;
+    --safe:#4cc776; --safe-bg:#12301e; --miss:#ff6b6b; --miss-bg:#3a1416;
+    --exc:#a9b4bc; --exc-bg:#263139; --warn:#f2b54a; --warn-bg:#3a2b10;
+    --t-rollstuhl:#6ea2ff; --t-hoeren:#c393f0; --t-sehen:#99a5ff; --t-therapie:#43cdbd;
+    --t-begleitung:#f0a640; --t-pflege:#f27fb5; --t-medizin:#ff8f5a; --t-weglauf:#c9a27c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1519; --surface:#172026; --surface-2:#1f2a31; --border:#2e3b43;
+  --text:#e8eef1; --muted:#9db0ba;
+  --brand:#3fb3c4; --brand-ink:#06181c; --brand-soft:#123a40;
+  --safe:#4cc776; --safe-bg:#12301e; --miss:#ff6b6b; --miss-bg:#3a1416;
+  --exc:#a9b4bc; --exc-bg:#263139; --warn:#f2b54a; --warn-bg:#3a2b10;
+  --t-rollstuhl:#6ea2ff; --t-hoeren:#c393f0; --t-sehen:#99a5ff; --t-therapie:#43cdbd;
+  --t-begleitung:#f0a640; --t-pflege:#f27fb5; --t-medizin:#ff8f5a; --t-weglauf:#c9a27c;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif;-webkit-tap-highlight-color:transparent;padding-bottom:84px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+
+/* Header */
+header.top{position:sticky;top:0;z-index:20;background:var(--brand);color:var(--brand-ink);padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+header.top img{height:36px;width:auto;border-radius:6px;background:#fff;padding:2px}
+.brand-mark{width:36px;height:36px;border-radius:9px;background:var(--brand-ink);color:var(--brand);display:grid;place-items:center;font-weight:800;font-size:15px;flex:none}
+.brand-txt{flex:1;min-width:0}
+.brand-txt b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-txt small{opacity:.85;font-size:13px}
+body.alarm header.top{background:var(--miss);color:#fff}
+body.alarm .brand-mark{color:var(--miss);background:#fff}
+.timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:18px;white-space:nowrap}
+
+/* Nav */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{background:none;border:0;padding:8px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted);min-height:60px}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-selected="true"]{color:var(--brand);font-weight:700}
+nav.tabs .badge{position:absolute;margin-left:22px;margin-top:-4px;background:var(--miss);color:#fff;border-radius:99px;font-size:11px;padding:0 6px;font-weight:700}
+nav.tabs button{position:relative}
+
+main{max-width:960px;margin:0 auto;padding:16px}
+section.view{display:none}
+section.view.active{display:block}
+h1{font-size:22px;margin:4px 0 12px}
+h2{font-size:17px;margin:20px 0 8px}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);margin-bottom:12px}
+.row-flex{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:160px}
+
+.btn{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:10px 14px;min-height:44px;font-weight:600;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+.btn.danger{background:var(--miss);color:#fff;border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.small{min-height:36px;padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input[type=text],input[type=search],select,textarea{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+label.chk{display:inline-flex;gap:8px;align-items:center;min-height:44px;cursor:pointer;user-select:none}
+label.chk input{width:20px;height:20px;accent-color:var(--brand)}
+
+.banner{border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.banner.warn{background:var(--warn-bg);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+.banner.info{background:var(--brand-soft);color:var(--text)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;text-align:center}
+.stat b{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.safe b{color:var(--safe)} .stat.miss b{color:var(--miss)} .stat.exc b{color:var(--exc)}
+.stat.miss.hot{background:var(--miss);border-color:var(--miss)} .stat.miss.hot b,.stat.miss.hot span{color:#fff}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* Missing alert */
+.missing-alert{background:var(--miss);color:#fff;border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;animation:pulse 1.6s ease-in-out infinite}
+.missing-alert h2{margin:0 0 6px;font-size:18px}
+.missing-alert ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.missing-alert li{background:rgba(255,255,255,.18);border-radius:8px;padding:4px 8px;font-weight:600}
+.all-safe{background:var(--safe);color:#fff;border-radius:var(--radius);padding:14px;margin-bottom:12px;font-weight:700;font-size:18px;text-align:center}
+@keyframes pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--miss) 30%,transparent)}}
+@media (prefers-reduced-motion:reduce){.missing-alert{animation:none}}
+
+/* Person list */
+.group-h{display:flex;align-items:center;gap:8px;margin:18px 0 6px}
+.group-h h2{margin:0;flex:1}
+.list{display:flex;flex-direction:column;gap:6px}
+.person{background:var(--surface);border:1px solid var(--border);border-left:6px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.person.needs{border-left-color:var(--warn)}
+.person.st-safe{border-left-color:var(--safe);background:color-mix(in srgb,var(--safe-bg) 55%,var(--surface))}
+.person.st-missing{border-left-color:var(--miss)}
+.person.st-excused{opacity:.72}
+.person.absent{opacity:.6}
+.person .who{flex:1;min-width:180px}
+.person .name{font-weight:700;font-size:17px}
+.person .meta{font-size:13px;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;border-radius:99px;padding:2px 9px 2px 7px;color:#fff;background:var(--c);line-height:1.5}
+.tag i{font-style:normal}
+.seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:8px 10px;min-height:48px;min-width:64px;font-weight:700;font-size:13.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button.on.safe{background:var(--safe);color:#fff}
+.seg button.on.missing{background:var(--miss);color:#fff}
+.seg button.on.excused{background:var(--exc);color:#fff}
+@media (max-width:520px){.seg{width:100%}.seg button{flex:1}}
+
+.presence{display:flex;align-items:center;gap:8px}
+.toggle{border:1px solid var(--border);border-radius:99px;min-height:44px;padding:6px 14px;font-weight:700;min-width:120px}
+.toggle.on{background:var(--safe-bg);color:var(--safe);border-color:color-mix(in srgb,var(--safe) 40%,transparent)}
+.toggle.off{background:var(--exc-bg);color:var(--exc)}
+.iconbtn{border:1px solid var(--border);background:var(--surface);border-radius:10px;width:44px;height:44px;display:grid;place-items:center}
+.iconbtn svg{width:20px;height:20px}
+
+/* Rooms */
+.progress{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin:6px 0 12px}
+.progress > div{height:100%;background:var(--safe);transition:width .3s}
+.room{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.room .who{flex:1;min-width:0}
+.room.done{background:color-mix(in srgb,var(--safe-bg) 60%,var(--surface));border-color:color-mix(in srgb,var(--safe) 40%,var(--border))}
+.room .clearbtn{min-width:132px}
+.room.done .clearbtn{background:var(--safe);color:#fff;border-color:transparent}
+.rtype{font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.rtype.pflege{background:color-mix(in srgb,var(--t-pflege) 18%,transparent);color:var(--t-pflege)}
+.rtype.therapie{background:color-mix(in srgb,var(--t-therapie) 18%,transparent);color:var(--t-therapie)}
+
+/* Big alarm start */
+.alarm-start{text-align:center;padding:28px 16px}
+.alarm-start .big{font-size:22px;padding:20px 28px;border-radius:16px;min-height:72px;width:100%;max-width:420px}
+
+/* Dialog */
+dialog{border:0;border-radius:16px;padding:0;max-width:520px;width:calc(100% - 32px);background:var(--surface);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{padding:18px;display:flex;flex-direction:column;gap:12px}
+dialog h2{margin:0}
+.tagpick{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tagpick label{border:1px solid var(--border);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}
+.tagpick input{accent-color:var(--brand);width:18px;height:18px}
+.legend{display:flex;flex-wrap:wrap;gap:6px}
+.empty{text-align:center;padding:30px 10px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.show{opacity:1}
+.small{font-size:13px}
+code{background:var(--surface-2);padding:1px 5px;border-radius:5px}
+
+/* Print protocol */
+#print{display:none}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  header.top,nav.tabs,main,.toast{display:none!important}
+  #print{display:block;font:11pt/1.35 system-ui,sans-serif}
+  #print table{width:100%;border-collapse:collapse;margin:6pt 0 12pt}
+  #print th,#print td{border:1px solid #999;padding:3pt 5pt;text-align:left}
+  #print h1{font-size:16pt;margin:0 0 4pt} #print h2{font-size:12pt;margin:12pt 0 4pt}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span id="logoSlot"><span class="brand-mark" aria-hidden="true">LS</span></span>
+  <div class="brand-txt">
+    <b id="schoolName">Lebenshilfe Schule</b>
+    <small id="subLine">Evakuierung</small>
+  </div>
+  <div class="timer" id="timer" hidden></div>
+</header>
+
+<main>
+  <!-- ===== MORGENS / PRÄSENZ ===== -->
+  <section class="view active" id="v-praesenz" aria-labelledby="h-praesenz">
+    <h1 id="h-praesenz">Präsenzliste <span class="muted small" id="todayLbl"></span></h1>
+    <div id="newDayBanner"></div>
+
+    <div class="stats">
+      <div class="stat"><b id="p-total">0</b><span>gesamt</span></div>
+      <div class="stat safe"><b id="p-present">0</b><span>anwesend</span></div>
+      <div class="stat exc"><b id="p-absent">0</b><span>abwesend</span></div>
+      <div class="stat"><b id="p-needs">0</b><span>mit Hilfebedarf</span></div>
+    </div>
+
+    <div class="card">
+      <div class="row-flex">
+        <button class="btn primary" id="btnImportList">CSV: Schülerliste</button>
+        <button class="btn" id="btnImportAbsent">CSV: Abwesenheiten</button>
+        <button class="btn" id="btnAddPerson">+ Person</button>
+      </div>
+      <p class="small muted" style="margin:8px 0 0">Export aus ASV oder WebUntis als CSV (Trennzeichen <code>;</code> oder <code>,</code>). Erkannte Spalten: Nachname/Familienname, Vorname/Rufname, Klasse, Bedarf, Raum. <a href="#" id="dlTemplate">Vorlage herunterladen</a></p>
+      <input type="file" id="fileList" accept=".csv,text/csv,.txt" hidden />
+      <input type="file" id="fileAbsent" accept=".csv,text/csv,.txt" hidden />
+    </div>
+
+    <div class="row-flex" style="margin-bottom:8px">
+      <input type="search" class="grow" id="p-search" placeholder="Name suchen …" aria-label="Name suchen" />
+      <select id="p-class" aria-label="Klasse filtern" style="width:auto;min-width:140px"></select>
+    </div>
+    <div id="p-list"></div>
+  </section>
+
+  <!-- ===== ALARM / SAMMELPLATZ ===== -->
+  <section class="view" id="v-alarm" aria-labelledby="h-alarm">
+    <h1 id="h-alarm">Sammelplatz</h1>
+    <div id="alarmBody"></div>
+  </section>
+
+  <!-- ===== RÄUME ===== -->
+  <section class="view" id="v-raeume" aria-labelledby="h-raeume">
+    <div class="row-flex"><h1 id="h-raeume" class="grow" style="margin-bottom:4px">Raumfreigabe</h1>
+      <button class="btn small" id="btnEditRooms">Räume bearbeiten</button></div>
+    <p class="muted small" style="margin:0">Für Brandschutz- und Evakuierungshelfer: abgegangene Räume als geräumt markieren.</p>
+    <div class="progress" aria-hidden="true"><div id="roomBar" style="width:0"></div></div>
+    <p id="roomCount" class="small" style="margin-top:-6px"></p>
+    <div id="roomList"></div>
+  </section>
+
+  <!-- ===== EINSTELLUNGEN ===== -->
+  <section class="view" id="v-setup" aria-labelledby="h-setup">
+    <h1 id="h-setup">Einstellungen</h1>
+    <div class="card">
+      <h2 style="margin-top:0">Schule</h2>
+      <label class="small muted" for="s-name">Name in der Kopfzeile</label>
+      <input type="text" id="s-name" />
+      <div class="row-flex" style="margin-top:10px">
+        <button class="btn" id="btnLogo">Logo hochladen</button>
+        <button class="btn ghost" id="btnLogoDel">Logo entfernen</button>
+        <input type="file" id="fileLogo" accept="image/*" hidden />
+      </div>
+      <div class="row-flex" style="margin-top:10px">
+        <label class="small muted" for="s-theme">Darstellung</label>
+        <select id="s-theme" style="width:auto"><option value="">Automatisch</option><option value="light">Hell</option><option value="dark">Dunkel</option></select>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Förder- und Hilfebedarf (Legende)</h2>
+      <div class="legend" id="legend"></div>
+      <p class="small muted">In der CSV-Spalte <code>Bedarf</code> mehrere Einträge mit <code>|</code> oder <code>,</code> trennen, z. B. <code>Rollstuhl|Schulbegleitung</code>.</p>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Daten</h2>
+      <p class="small muted">Alle Daten liegen ausschließlich im Browser dieses Geräts (localStorage). Nichts wird ins Internet übertragen.</p>
+      <div class="row-flex">
+        <button class="btn" id="btnBackup">Sicherung exportieren (JSON)</button>
+        <button class="btn" id="btnRestore">Sicherung laden</button>
+        <input type="file" id="fileRestore" accept=".json,application/json" hidden />
+      </div>
+      <div class="row-flex" style="margin-top:8px">
+        <button class="btn" id="btnDemo">Demodaten laden</button>
+        <button class="btn danger" id="btnWipe">Alle Daten löschen</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" role="tablist" aria-label="Bereiche">
+  <button role="tab" data-v="praesenz" aria-selected="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>Präsenz</button>
+  <button role="tab" data-v="alarm" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-1a6 6 0 0 1 12 0v1"/><path d="M17 11l2 2 4-4"/></svg>Sammelplatz<span class="badge" id="navMiss" hidden></span></button>
+  <button role="tab" data-v="raeume" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21h18"/><path d="M5 21V4h10v17"/><path d="M15 9h4v12"/><circle cx="12" cy="13" r=".8" fill="currentColor"/></svg>Räume</button>
+  <button role="tab" data-v="setup" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Einstellungen</button>
+</nav>
+
+<!-- Person-Dialog -->
+<dialog id="dlgPerson">
+  <form method="dialog" id="formPerson">
+    <h2 id="dlgPersonTitle">Person</h2>
+    <div class="row-flex">
+      <input type="text" class="grow" name="last" placeholder="Nachname" required aria-label="Nachname" />
+      <input type="text" class="grow" name="first" placeholder="Vorname" aria-label="Vorname" />
+    </div>
+    <div class="row-flex">
+      <input type="text" class="grow" name="klasse" placeholder="Klasse / Gruppe" list="classList" aria-label="Klasse" />
+      <input type="text" class="grow" name="raum" placeholder="Raum (z. B. Therapie)" aria-label="Raum" />
+    </div>
+    <datalist id="classList"></datalist>
+    <div><b class="small">Förder- und Hilfebedarf</b><div class="tagpick" id="tagPick" style="margin-top:6px"></div></div>
+    <textarea name="note" rows="2" placeholder="Hinweis für Helfer (z. B. Evakuierungsstuhl im Flur OG)" aria-label="Hinweis"></textarea>
+    <div class="row-flex">
+      <button type="button" class="btn danger small" id="btnDelPerson">Löschen</button>
+      <span class="grow"></span>
+      <button value="cancel" class="btn" formnovalidate>Abbrechen</button>
+      <button value="ok" class="btn primary">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Räume-Dialog -->
+<dialog id="dlgRooms">
+  <form method="dialog">
+    <h2>Räume bearbeiten</h2>
+    <p class="small muted" style="margin:0">Eine Zeile pro Raum: <code>Bereich; Raumname; Typ</code><br>Typ: <code>Klasse</code>, <code>Pflege</code>, <code>Therapie</code> oder <code>Sonstiges</code></p>
+    <textarea id="roomsText" rows="12" style="font-family:ui-monospace,monospace;font-size:14px"></textarea>
+    <div class="row-flex"><span class="grow"></span>
+      <button value="cancel" class="btn">Abbrechen</button>
+      <button value="ok" class="btn primary">Übernehmen</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="print"></div>
+
+<script>
+"use strict";
+/* ================= Konfiguration ================= */
+const TAGS = [
+  {id:"rollstuhl",  label:"Rollstuhl",            icon:"♿", match:/roll|rolli|gehhilfe|evak.*stuhl/i},
+  {id:"hoeren",     label:"Hörbeeinträchtigung",  icon:"👂", match:/h[öo]r|geh[öo]rlos|taub|gebärde/i},
+  {id:"sehen",      label:"Sehbeeinträchtigung",  icon:"👁", match:/seh|blind/i},
+  {id:"therapie",   label:"Therapieraum",         icon:"⛑", match:/therap/i},
+  {id:"begleitung", label:"Schulbegleitung",      icon:"🤝", match:/begleit|assistenz|i-?kraft|integrationshelf/i},
+  {id:"pflege",     label:"Pflege / Lagerung",    icon:"🛏", match:/pfleg|lager|wickel/i},
+  {id:"medizin",    label:"Medikamente / Notfall",icon:"💊", match:/medi|epilep|notfall|anfall|diabet|allerg/i},
+  {id:"weglauf",    label:"Weglauftendenz",       icon:"🏃", match:/weglauf|hinlauf|flucht|entweich/i},
+];
+const TAG = Object.fromEntries(TAGS.map(t=>[t.id,t]));
+const STATUS = {safe:"Sicher am Sammelplatz", missing:"Fehlt / Im Gebäude", excused:"Entschuldigt"};
+const ROOM_TYPES = {klasse:"Klassenraum", pflege:"Pflegeraum", therapie:"Therapieraum", sonstiges:"Sonstiges"};
+const KEY = "evakuierung-v1";
+
+/* ================= State ================= */
+const today = () => new Date().toLocaleDateString("sv-SE"); // YYYY-MM-DD
+const uid = () => Math.random().toString(36).slice(2,10);
+const blank = () => ({settings:{schoolName:"Lebenshilfe Schule",logo:"",theme:""},date:today(),people:[],rooms:defaultRooms(),alarm:null,lastProtocol:null});
+function defaultRooms(){
+  return parseRooms(`Erdgeschoss; Klasse 1/2; Klasse
+Erdgeschoss; Klasse 3/4; Klasse
+Erdgeschoss; Pflegeraum EG; Pflege
+Erdgeschoss; Turnhalle; Sonstiges
+Erdgeschoss; Mensa; Sonstiges
+Obergeschoss; Klasse 5/6; Klasse
+Obergeschoss; Klasse 7/8; Klasse
+Obergeschoss; Pflegeraum OG; Pflege
+Obergeschoss; Physiotherapie; Therapie
+Obergeschoss; Logopädie; Therapie
+Obergeschoss; Snoezelraum; Therapie
+Obergeschoss; WCs / Duschbad; Sonstiges`);
+}
+let S;
+function load(){
+  try{ S = JSON.parse(localStorage.getItem(KEY)) || blank(); }catch{ S = blank(); }
+  S.settings ||= blank().settings; S.people ||= []; S.rooms ||= defaultRooms();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ toast("⚠ Speichern nicht möglich (privater Modus?)"); } }
+
+/* ================= Helpers ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fullName = p => [p.first,p.last].filter(Boolean).join(" ");
+const sortName = (a,b) => (a.last||"").localeCompare(b.last||"","de") || (a.first||"").localeCompare(b.first||"","de");
+const classSort = (a,b) => a.localeCompare(b,"de",{numeric:true});
+const fmtTime = ts => ts ? new Date(ts).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) : "";
+const fmtDate = d => new Date(d+"T12:00").toLocaleDateString("de-DE",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"});
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
+function tagChips(p){ return (p.tags||[]).filter(t=>TAG[t]).map(t=>`<span class="tag" style="--c:var(--t-${t})" title="${esc(TAG[t].label)}"><i aria-hidden="true">${TAG[t].icon}</i>${esc(TAG[t].label)}</span>`).join(""); }
+function classes(){ return [...new Set(S.people.map(p=>p.klasse||"ohne Klasse"))].sort(classSort); }
+function download(name, text, type="text/csv;charset=utf-8"){
+  const blob = new Blob([type.startsWith("text/csv")?"﻿"+text:text],{type});
+  const a = Object.assign(document.createElement("a"),{href:URL.createObjectURL(blob),download:name});
+  document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+const csvCell = v => /[;"\n]/.test(String(v??"")) ? `"${String(v).replace(/"/g,'""')}"` : String(v??"");
+
+/* ================= CSV ================= */
+function parseCSV(text){
+  text = text.replace(/^﻿/,"");
+  const first = text.split(/\r?\n/).find(l=>l.trim())||"";
+  const delim = [";","\t",","].map(d=>[d,first.split(d).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const rows=[]; let row=[], cell="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===delim){ row.push(cell); cell=""; }
+    else if(c==="\n"||c==="\r"){ if(c==="\r"&&text[i+1]==="\n") i++; row.push(cell); rows.push(row); row=[]; cell=""; }
+    else cell+=c;
+  }
+  if(cell||row.length){ row.push(cell); rows.push(row); }
+  return rows.map(r=>r.map(c=>c.trim())).filter(r=>r.some(Boolean));
+}
+function readFileText(file){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=()=>{ const t=r.result; if(t.includes("�")){ const r2=new FileReader(); r2.onload=()=>res(r2.result); r2.readAsText(file,"windows-1252"); } else res(t); };
+    r.readAsText(file,"utf-8");
+  });
+}
+function mapColumns(header){
+  const h = header.map(x=>x.toLowerCase().replace(/[^a-zäöüß]/g,""));
+  const find = (...pats) => h.findIndex(x=>pats.some(p=>p.test(x)));
+  return {
+    last:   find(/^(nach|familien|zu)name/,/^schülername$/,/^name$/),
+    first:  find(/^(vor|ruf)name/),
+    klasse: find(/^klasse/,/^lerngruppe/,/^gruppe/,/^stufe/),
+    tags:   find(/bedarf/,/^tags?$/,/förder/,/hilfe/,/merkmal/,/hinweis/),
+    raum:   find(/^raum/),
+    absent: find(/^(abwesend|fehlt|krank|status|anwesenheit)/),
+  };
+}
+function rowsToPeople(rows){
+  if(!rows.length) return [];
+  let col = mapColumns(rows[0]), body = rows.slice(1);
+  if(col.last<0 && col.first<0){ col = {last:0,first:1,klasse:2,tags:3,raum:-1,absent:-1}; body = rows; } // keine Kopfzeile
+  return body.map(r=>{
+    let last=r[col.last]||"", first=col.first>=0?(r[col.first]||""):"";
+    if(!first && last.includes(",")){ [last,first]=last.split(",").map(s=>s.trim()); }      // "Nachname, Vorname"
+    const tagTxt = col.tags>=0 ? r[col.tags]||"" : "";
+    const tags = TAGS.filter(t=>t.match.test(tagTxt)).map(t=>t.id);
+    const raum = col.raum>=0 ? r[col.raum]||"" : "";
+    if(/therap/i.test(raum) && !tags.includes("therapie")) tags.push("therapie");
+    const absTxt = col.absent>=0 ? (r[col.absent]||"").toLowerCase() : "";
+    const absent = /^(x|ja|1|true|abwesend|krank|fehlt|entschuldigt|e)$/.test(absTxt);
+    return {id:uid(), last, first, klasse:col.klasse>=0?(r[col.klasse]||""):"", tags, raum, note:"", present:!absent};
+  }).filter(p=>p.last||p.first);
+}
+const keyOf = p => `${(p.last||"").toLowerCase()}|${(p.first||"").toLowerCase()}`;
+
+async function importList(file){
+  const people = rowsToPeople(parseCSV(await readFileText(file)));
+  if(!people.length) return toast("Keine Namen in der Datei gefunden.");
+  const old = new Map(S.people.map(p=>[keyOf(p),p]));
+  let kept=0;
+  S.people = people.map(p=>{
+    const o = old.get(keyOf(p));
+    if(o){ kept++; return {...p, id:o.id, tags:p.tags.length?p.tags:o.tags, note:o.note||"", raum:p.raum||o.raum}; }
+    return p;
+  });
+  S.date = today(); save(); renderAll();
+  toast(`${people.length} Personen importiert` + (kept?` · Bedarfe von ${kept} übernommen`:""));
+}
+async function importAbsent(file){
+  const list = rowsToPeople(parseCSV(await readFileText(file)));
+  const idx = new Map(S.people.map(p=>[keyOf(p),p]));
+  let hit=0, miss=[];
+  list.forEach(a=>{ const p=idx.get(keyOf(a)); if(p){ p.present=false; hit++; } else miss.push(fullName(a)); });
+  save(); renderAll();
+  toast(`${hit} als abwesend markiert` + (miss.length?` · ${miss.length} nicht gefunden: ${miss.slice(0,3).join(", ")}${miss.length>3?" …":""}`:""));
+}
+
+/* ================= Räume ================= */
+function parseRooms(text){
+  return text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{
+    const parts = l.split(/[;\t]/).map(s=>s.trim());
+    let [area,name,type] = parts.length>=2 ? parts : ["Allgemein",parts[0],""];
+    type = (type||"").toLowerCase(); type = Object.keys(ROOM_TYPES).find(k=>type.startsWith(k.slice(0,4))) || "sonstiges";
+    return {id:uid(), area:area||"Allgemein", name, type, cleared:false, clearedAt:null};
+  });
+}
+
+/* ================= Render: Präsenz ================= */
+function renderPraesenz(){
+  $("#todayLbl").textContent = "· " + fmtDate(today());
+  const nb = $("#newDayBanner");
+  if(S.people.length && S.date !== today()){
+    nb.innerHTML = `<div class="banner warn"><b>Neuer Schultag.</b><span class="grow">Die Präsenz stammt vom ${esc(fmtDate(S.date))}.</span><button class="btn small primary" id="btnNewDay">Alle auf „anwesend“ setzen</button></div>`;
+    $("#btnNewDay").onclick = ()=>{ S.people.forEach(p=>p.present=true); S.date=today(); save(); renderAll(); toast("Präsenz für heute zurückgesetzt"); };
+  } else nb.innerHTML = "";
+
+  const pres = S.people.filter(p=>p.present);
+  $("#p-total").textContent = S.people.length;
+  $("#p-present").textContent = pres.length;
+  $("#p-absent").textContent = S.people.length - pres.length;
+  $("#p-needs").textContent = pres.filter(p=>p.tags?.length).length;
+
+  const sel = $("#p-class"), cur = sel.value;
+  sel.innerHTML = `<option value="">Alle Klassen</option>` + classes().map(c=>`<option ${c===cur?"selected":""}>${esc(c)}</option>`).join("");
+  $("#classList").innerHTML = classes().map(c=>`<option value="${esc(c)}">`).join("");
+
+  const q = $("#p-search").value.trim().toLowerCase(), fc = sel.value;
+  const list = S.people.filter(p=>(!fc||(p.klasse||"ohne Klasse")===fc) && (!q||fullName(p).toLowerCase().includes(q)));
+  const host = $("#p-list");
+  if(!S.people.length){ host.innerHTML = `<div class="empty card"><p><b>Noch keine Schülerliste.</b></p><p>CSV aus ASV/WebUntis importieren, Personen manuell anlegen oder in den Einstellungen Demodaten laden.</p></div>`; return; }
+  host.innerHTML = groupBy(list).map(([k,ps])=>`
+    <div class="group-h"><h2>${esc(k)} <span class="muted small">${ps.filter(p=>p.present).length}/${ps.length} anwesend</span></h2></div>
+    <div class="list">${ps.map(p=>`
+      <div class="person ${p.present?"":"absent"} ${p.tags?.length?"needs":""}">
+        <div class="who"><div class="name">${esc(p.last)}${p.first?", "+esc(p.first):""}</div>
+          ${p.raum||p.note?`<div class="meta">${esc([p.raum&&("Raum: "+p.raum),p.note].filter(Boolean).join(" · "))}</div>`:""}
+          <div class="tags">${tagChips(p)}</div></div>
+        <div class="presence">
+          <button class="toggle ${p.present?"on":"off"}" data-pres="${p.id}" aria-pressed="${p.present}">${p.present?"✓ anwesend":"✗ abwesend"}</button>
+          <button class="iconbtn" data-edit="${p.id}" aria-label="${esc(fullName(p))} bearbeiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+        </div>
+      </div>`).join("")}</div>`).join("") || `<div class="empty">Keine Treffer.</div>`;
+}
+function groupBy(list){
+  const m = new Map();
+  list.slice().sort(sortName).forEach(p=>{ const k=p.klasse||"ohne Klasse"; if(!m.has(k)) m.set(k,[]); m.get(k).push(p); });
+  return [...m.entries()].sort((a,b)=>classSort(a[0],b[0]));
+}
+
+/* ================= Render: Alarm ================= */
+let fMissingOnly=false, fNeedsOnly=false, fClass="", fSearch="";
+function counts(){
+  const st = S.alarm?.status||{};
+  const c = {safe:0,missing:0,excused:0};
+  S.people.forEach(p=>c[st[p.id]||(p.present?"missing":"excused")]++);
+  return c;
+}
+function renderAlarm(){
+  const host = $("#alarmBody");
+  const navB = $("#navMiss");
+  document.body.classList.toggle("alarm", !!S.alarm);
+  $("#subLine").textContent = S.alarm ? (S.alarm.drill?"PROBEALARM läuft":"ALARM läuft") : "Evakuierung";
+  if(!S.alarm){
+    navB.hidden = true; $("#timer").hidden = true;
+    const pres = S.people.filter(p=>p.present).length;
+    host.innerHTML = `
+      <div class="card alarm-start">
+        <p style="margin-top:0">Heute anwesend: <b>${pres}</b> Personen${S.people.length-pres?` · ${S.people.length-pres} abwesend`:""}</p>
+        <button class="btn danger big" id="btnAlarm">🚨 Alarm starten</button>
+        <p><button class="btn" id="btnDrill">Probealarm starten</button></p>
+        <p class="small muted">Alle anwesenden Personen stehen zunächst auf <b>„Fehlt“</b>, bis sie am Sammelplatz abgehakt werden. Abwesende werden automatisch als <b>„Entschuldigt“</b> geführt. Die Raumliste wird zurückgesetzt.</p>
+      </div>
+      ${S.lastProtocol?`<div class="card"><b>Letzte Evakuierung:</b> ${esc(new Date(S.lastProtocol.startedAt).toLocaleString("de-DE"))}${S.lastProtocol.drill?" (Probe)":""}
+        <div class="row-flex" style="margin-top:8px"><button class="btn small" id="btnLastCsv">Protokoll CSV</button><button class="btn small" id="btnLastPrint">Protokoll drucken</button></div></div>`:""}`;
+    $("#btnAlarm").onclick = ()=>startAlarm(false);
+    $("#btnDrill").onclick = ()=>startAlarm(true);
+    if(S.lastProtocol){ $("#btnLastCsv").onclick=()=>exportProtocol(S.lastProtocol); $("#btnLastPrint").onclick=()=>printProtocol(S.lastProtocol); }
+    return;
+  }
+  const c = counts(), st = S.alarm.status;
+  navB.hidden = !c.missing; navB.textContent = c.missing;
+  const missing = S.people.filter(p=>st[p.id]==="missing").sort(sortName);
+
+  const cls = classes();
+  const q = fSearch.toLowerCase();
+  const list = S.people.filter(p=>
+    (!fMissingOnly || st[p.id]==="missing") &&
+    (!fNeedsOnly || p.tags?.length) &&
+    (!fClass || (p.klasse||"ohne Klasse")===fClass) &&
+    (!q || fullName(p).toLowerCase().includes(q)));
+
+  host.innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${c.safe+c.missing}</b><span>anwesend heute</span></div>
+      <div class="stat safe"><b>${c.safe}</b><span>sicher</span></div>
+      <div class="stat miss ${c.missing?"hot":""}"><b>${c.missing}</b><span>fehlen</span></div>
+      <div class="stat exc"><b>${c.excused}</b><span>entschuldigt</span></div>
+    </div>
+    ${c.missing ? `<div class="missing-alert" role="alert"><h2>⚠ ${c.missing} ${c.missing===1?"Person wird":"Personen werden"} vermisst</h2>
+      <ul>${missing.slice(0,40).map(p=>`<li>${esc(fullName(p))} <span style="opacity:.8;font-weight:400">(${esc(p.klasse||"–")})</span> ${(p.tags||[]).map(t=>TAG[t]?.icon||"").join("")}</li>`).join("")}${missing.length>40?`<li>+${missing.length-40} weitere</li>`:""}</ul></div>`
+      : `<div class="all-safe" role="status">✓ Alle anwesenden Personen sind am Sammelplatz</div>`}
+    <div class="row-flex" style="margin-bottom:6px">
+      <input type="search" class="grow" id="a-search" placeholder="Name suchen …" value="${esc(fSearch)}" aria-label="Name suchen" />
+      <select id="a-class" style="width:auto;min-width:130px" aria-label="Klasse"><option value="">Alle Klassen</option>${cls.map(k=>`<option ${k===fClass?"selected":""}>${esc(k)}</option>`).join("")}</select>
+    </div>
+    <div class="row-flex">
+      <label class="chk"><input type="checkbox" id="a-miss" ${fMissingOnly?"checked":""}/> nur Fehlende</label>
+      <label class="chk"><input type="checkbox" id="a-needs" ${fNeedsOnly?"checked":""}/> nur mit Hilfebedarf</label>
+      <span class="grow"></span>
+      <button class="btn small" id="btnCsv">Protokoll CSV</button>
+      <button class="btn small danger" id="btnEnd">Alarm beenden</button>
+    </div>
+    ${groupBy(list).map(([k,ps])=>{
+      const all = S.people.filter(p=>(p.klasse||"ohne Klasse")===k);
+      const s = all.filter(p=>st[p.id]==="safe").length, m = all.filter(p=>st[p.id]==="missing").length;
+      return `<div class="group-h"><h2>${esc(k)} <span class="small" style="color:${m?"var(--miss)":"var(--safe)"}">${s} sicher${m?` · ${m} fehlen`:" ✓"}</span></h2>
+        ${m?`<button class="btn small" data-classsafe="${esc(k)}">Alle sicher</button>`:""}</div>
+      <div class="list">${ps.map(p=>{ const v=st[p.id]; return `
+        <div class="person st-${v} ${p.tags?.length?"needs":""}">
+          <div class="who"><div class="name">${esc(p.last)}${p.first?", "+esc(p.first):""}</div>
+            ${p.raum||p.note?`<div class="meta">${esc([p.raum&&("Raum: "+p.raum),p.note].filter(Boolean).join(" · "))}</div>`:""}
+            ${S.alarm.times[p.id]&&v==="safe"?`<div class="meta">✓ ${fmtTime(S.alarm.times[p.id])}</div>`:""}
+            <div class="tags">${tagChips(p)}</div></div>
+          <div class="seg" role="group" aria-label="Status ${esc(fullName(p))}">
+            <button class="safe ${v==="safe"?"on":""}" data-st="safe" data-id="${p.id}" aria-pressed="${v==="safe"}">✓<span>Sicher</span></button>
+            <button class="missing ${v==="missing"?"on":""}" data-st="missing" data-id="${p.id}" aria-pressed="${v==="missing"}">!<span>Fehlt</span></button>
+            <button class="excused ${v==="excused"?"on":""}" data-st="excused" data-id="${p.id}" aria-pressed="${v==="excused"}">–<span>Entsch.</span></button>
+          </div>
+        </div>`;}).join("")}</div>`;}).join("") || `<div class="empty">Keine Personen für diesen Filter.</div>`}`;
+
+  $("#a-search").oninput = e=>{ fSearch=e.target.value; const pos=e.target.selectionStart; renderAlarm(); const el=$("#a-search"); el.focus(); el.setSelectionRange(pos,pos); };
+  $("#a-class").onchange = e=>{ fClass=e.target.value; renderAlarm(); };
+  $("#a-miss").onchange = e=>{ fMissingOnly=e.target.checked; renderAlarm(); };
+  $("#a-needs").onchange = e=>{ fNeedsOnly=e.target.checked; renderAlarm(); };
+  $("#btnCsv").onclick = ()=>exportProtocol(snapshot());
+  $("#btnEnd").onclick = endAlarm;
+}
+let wakeLock=null, tick=null;
+async function startAlarm(drill){
+  if(!S.people.length && !confirm("Es ist keine Schülerliste vorhanden. Trotzdem starten?")) return;
+  const status={}; S.people.forEach(p=>status[p.id]=p.present?"missing":"excused");
+  S.alarm = {startedAt:Date.now(), drill, status, times:{}};
+  S.rooms.forEach(r=>{r.cleared=false;r.clearedAt=null;});
+  save(); fMissingOnly=false; fClass=""; fSearch="";
+  renderAll(); show("alarm"); startTimer();
+  try{ wakeLock = await navigator.wakeLock?.request("screen"); }catch{}
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+}
+function startTimer(){
+  const el=$("#timer"); el.hidden=false; clearInterval(tick);
+  const upd=()=>{ if(!S.alarm){clearInterval(tick);el.hidden=true;return;} const s=Math.floor((Date.now()-S.alarm.startedAt)/1000); el.textContent=`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`; };
+  upd(); tick=setInterval(upd,1000);
+}
+function snapshot(){
+  return {startedAt:S.alarm.startedAt, endedAt:S.alarm.endedAt||Date.now(), drill:S.alarm.drill, school:S.settings.schoolName,
+    people:S.people.map(p=>({...p, status:S.alarm.status[p.id]||"excused", at:S.alarm.times[p.id]||null})),
+    rooms:S.rooms.map(r=>({...r}))};
+}
+function endAlarm(){
+  const c=counts();
+  const msg = c.missing ? `ACHTUNG: ${c.missing} Person(en) stehen noch auf „Fehlt“.\nAlarm trotzdem beenden?` : "Alarm beenden und Protokoll speichern?";
+  if(!confirm(msg)) return;
+  S.alarm.endedAt = Date.now(); S.lastProtocol = snapshot(); S.alarm = null; save();
+  try{ wakeLock?.release(); }catch{} wakeLock=null;
+  renderAll(); toast("Alarm beendet – Protokoll gespeichert");
+}
+function exportProtocol(P){
+  const d = new Date(P.startedAt);
+  const lines = [["Evakuierungsprotokoll",P.school,P.drill?"Probealarm":"Alarm"],["Beginn",d.toLocaleString("de-DE")],["Ende",P.endedAt?new Date(P.endedAt).toLocaleString("de-DE"):""],[],
+    ["Nachname","Vorname","Klasse","Bedarf","Status","Uhrzeit","Hinweis"],
+    ...P.people.slice().sort((a,b)=>classSort(a.klasse||"",b.klasse||"")||sortName(a,b)).map(p=>[p.last,p.first,p.klasse,(p.tags||[]).map(t=>TAG[t]?.label).join(" | "),STATUS[p.status],fmtTime(p.at),p.note]),
+    [],["Bereich","Raum","Typ","Geräumt","Uhrzeit"],
+    ...P.rooms.map(r=>[r.area,r.name,ROOM_TYPES[r.type],r.cleared?"ja":"NEIN",fmtTime(r.clearedAt)])];
+  download(`evakuierung_${d.toLocaleDateString("sv-SE")}_${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}.csv`, lines.map(l=>l.map(csvCell).join(";")).join("\r\n"));
+}
+function printProtocol(P){
+  const c={safe:0,missing:0,excused:0}; P.people.forEach(p=>c[p.status]++);
+  $("#print").innerHTML = `<h1>Evakuierungsprotokoll – ${esc(P.school)}${P.drill?" (Probealarm)":""}</h1>
+    <p>Beginn: ${esc(new Date(P.startedAt).toLocaleString("de-DE"))} · Ende: ${esc(new Date(P.endedAt).toLocaleString("de-DE"))} · Dauer: ${Math.round((P.endedAt-P.startedAt)/60000)} min</p>
+    <p>Sicher: <b>${c.safe}</b> · Fehlt: <b>${c.missing}</b> · Entschuldigt: <b>${c.excused}</b></p>
+    <h2>Personen</h2><table><tr><th>Name</th><th>Klasse</th><th>Bedarf</th><th>Status</th><th>Zeit</th></tr>
+    ${P.people.slice().sort((a,b)=>classSort(a.klasse||"",b.klasse||"")||sortName(a,b)).map(p=>`<tr><td>${esc(p.last)}, ${esc(p.first)}</td><td>${esc(p.klasse)}</td><td>${esc((p.tags||[]).map(t=>TAG[t]?.label).join(", "))}</td><td>${esc(STATUS[p.status])}</td><td>${fmtTime(p.at)}</td></tr>`).join("")}</table>
+    <h2>Räume</h2><table><tr><th>Bereich</th><th>Raum</th><th>Typ</th><th>Geräumt</th><th>Zeit</th></tr>
+    ${P.rooms.map(r=>`<tr><td>${esc(r.area)}</td><td>${esc(r.name)}</td><td>${esc(ROOM_TYPES[r.type])}</td><td>${r.cleared?"ja":"<b>NEIN</b>"}</td><td>${fmtTime(r.clearedAt)}</td></tr>`).join("")}</table>
+    <p style="margin-top:24pt">Unterschrift Evakuierungsleitung: ____________________________</p>`;
+  window.print();
+}
+
+/* ================= Render: Räume ================= */
+function renderRooms(){
+  const done = S.rooms.filter(r=>r.cleared).length, n=S.rooms.length;
+  $("#roomBar").style.width = n? (done/n*100)+"%" : "0";
+  $("#roomCount").innerHTML = n ? `<b>${done} von ${n}</b> Räumen geräumt${done<n?` · <span style="color:var(--miss);font-weight:700">${n-done} offen</span>`:" ✓"}` : "";
+  const areas = new Map(); S.rooms.forEach(r=>{ if(!areas.has(r.area)) areas.set(r.area,[]); areas.get(r.area).push(r); });
+  $("#roomList").innerHTML = [...areas].map(([a,rs])=>`
+    <div class="group-h"><h2>${esc(a)} <span class="muted small">${rs.filter(r=>r.cleared).length}/${rs.length}</span></h2></div>
+    <div class="list">${rs.map(r=>`
+      <div class="room ${r.cleared?"done":""}">
+        <div class="who"><b>${esc(r.name)}</b> <span class="rtype ${r.type}">${esc(ROOM_TYPES[r.type])}</span>
+          ${r.cleared?`<div class="small muted">geräumt ${fmtTime(r.clearedAt)}</div>`:""}</div>
+        <button class="btn clearbtn" data-room="${r.id}" aria-pressed="${r.cleared}">${r.cleared?"✓ geräumt":"Als geräumt markieren"}</button>
+      </div>`).join("")}</div>`).join("") || `<div class="empty card">Keine Räume angelegt. „Räume bearbeiten“ antippen.</div>`;
+}
+
+/* ================= Render: Einstellungen ================= */
+function renderSetup(){
+  $("#s-name").value = S.settings.schoolName;
+  $("#s-theme").value = S.settings.theme||"";
+  $("#legend").innerHTML = TAGS.map(t=>`<span class="tag" style="--c:var(--t-${t.id})"><i>${t.icon}</i>${esc(t.label)}</span>`).join("");
+}
+function renderBrand(){
+  $("#schoolName").textContent = S.settings.schoolName || "Lebenshilfe Schule";
+  document.title = "Evakuierung – " + (S.settings.schoolName||"Lebenshilfe Schule");
+  const initials = (S.settings.schoolName||"LS").split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+  $("#logoSlot").innerHTML = S.settings.logo ? `<img src="${S.settings.logo}" alt="Logo">` : `<span class="brand-mark" aria-hidden="true">${esc(initials)}</span>`;
+  if(S.settings.theme) document.documentElement.dataset.theme = S.settings.theme; else delete document.documentElement.dataset.theme;
+}
+function renderAll(){ renderBrand(); renderPraesenz(); renderAlarm(); renderRooms(); renderSetup(); }
+
+/* ================= Navigation ================= */
+function show(v){
+  document.querySelectorAll("section.view").forEach(s=>s.classList.toggle("active", s.id==="v-"+v));
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.v===v));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+
+/* ================= Events ================= */
+document.addEventListener("click", e=>{
+  const t = e.target.closest("button"); if(!t) return;
+  if(t.dataset.pres){ const p=S.people.find(x=>x.id===t.dataset.pres); p.present=!p.present; S.date=today(); save(); renderPraesenz(); renderAlarm(); }
+  else if(t.dataset.edit){ openPerson(t.dataset.edit); }
+  else if(t.dataset.st && S.alarm){
+    const id=t.dataset.id; S.alarm.status[id]=t.dataset.st;
+    if(t.dataset.st==="safe") S.alarm.times[id]=Date.now(); else delete S.alarm.times[id];
+    // Scroll-Anker: angetippte Zeile bleibt unter dem Finger, auch wenn die Vermisst-Liste oben schrumpft
+    const before = t.getBoundingClientRect().top;
+    save(); renderAlarm(); if(navigator.vibrate) navigator.vibrate(30);
+    const again = document.querySelector(`#alarmBody button[data-id="${id}"][data-st="${t.dataset.st}"]`);
+    if(again) window.scrollBy(0, again.getBoundingClientRect().top - before);
+  }
+  else if(t.dataset.classsafe && S.alarm){
+    const k=t.dataset.classsafe; const ps=S.people.filter(p=>(p.klasse||"ohne Klasse")===k && S.alarm.status[p.id]==="missing");
+    if(!confirm(`${ps.length} Person(en) aus „${k}“ als sicher markieren?\n\n${ps.map(fullName).join(", ")}`)) return;
+    ps.forEach(p=>{S.alarm.status[p.id]="safe";S.alarm.times[p.id]=Date.now();}); save(); renderAlarm();
+  }
+  else if(t.dataset.room){ const r=S.rooms.find(x=>x.id===t.dataset.room); r.cleared=!r.cleared; r.clearedAt=r.cleared?Date.now():null; save(); renderRooms(); }
+});
+$("#p-search").oninput = renderPraesenz;
+$("#p-class").onchange = renderPraesenz;
+$("#btnImportList").onclick = ()=>$("#fileList").click();
+$("#btnImportAbsent").onclick = ()=>{ if(!S.people.length) return toast("Zuerst die Schülerliste importieren."); $("#fileAbsent").click(); };
+$("#fileList").onchange = e=>{ const f=e.target.files[0]; if(f){ if(!S.people.length || confirm("Schülerliste ersetzen?\nBedarfe und Hinweise bekannter Personen bleiben erhalten.")) importList(f); } e.target.value=""; };
+$("#fileAbsent").onchange = e=>{ const f=e.target.files[0]; if(f) importAbsent(f); e.target.value=""; };
+$("#dlTemplate").onclick = e=>{ e.preventDefault(); download("vorlage_schuelerliste.csv","Nachname;Vorname;Klasse;Bedarf;Raum\r\nMuster;Mia;1/2;Rollstuhl|Schulbegleitung;\r\nBeispiel;Ben;3/4;Hörbeeinträchtigung;Logopädie\r\n"); };
+
+/* Person-Dialog */
+let editId=null;
+$("#tagPick").innerHTML = TAGS.map(t=>`<label><input type="checkbox" value="${t.id}"><span class="tag" style="--c:var(--t-${t.id})"><i>${t.icon}</i>${esc(t.label)}</span></label>`).join("");
+function openPerson(id){
+  editId=id; const p = S.people.find(x=>x.id===id) || {last:"",first:"",klasse:$("#p-class").value||"",raum:"",note:"",tags:[]};
+  const f=$("#formPerson");
+  f.last.value=p.last; f.first.value=p.first; f.klasse.value=p.klasse; f.raum.value=p.raum||""; f.note.value=p.note||"";
+  f.querySelectorAll("#tagPick input").forEach(i=>i.checked=(p.tags||[]).includes(i.value));
+  $("#dlgPersonTitle").textContent = id ? "Person bearbeiten" : "Person hinzufügen";
+  $("#btnDelPerson").hidden = !id;
+  $("#dlgPerson").showModal();
+}
+$("#btnAddPerson").onclick = ()=>openPerson(null);
+$("#dlgPerson").addEventListener("close", ()=>{
+  if($("#dlgPerson").returnValue!=="ok") return;
+  const f=$("#formPerson");
+  const data = {last:f.last.value.trim(), first:f.first.value.trim(), klasse:f.klasse.value.trim(), raum:f.raum.value.trim(), note:f.note.value.trim(),
+    tags:[...f.querySelectorAll("#tagPick input:checked")].map(i=>i.value)};
+  if(editId){ Object.assign(S.people.find(x=>x.id===editId), data); }
+  else { const p={id:uid(),present:true,...data}; S.people.push(p); if(S.alarm) S.alarm.status[p.id]="missing"; }
+  save(); renderAll();
+});
+$("#btnDelPerson").onclick = ()=>{
+  const p=S.people.find(x=>x.id===editId); if(!p||!confirm(`${fullName(p)} wirklich löschen?`)) return;
+  S.people=S.people.filter(x=>x.id!==editId); $("#dlgPerson").close(); save(); renderAll();
+};
+
+/* Räume-Dialog */
+$("#btnEditRooms").onclick = ()=>{ $("#roomsText").value = S.rooms.map(r=>`${r.area}; ${r.name}; ${ROOM_TYPES[r.type].replace(/raum$/,"")}`).join("\n"); $("#dlgRooms").showModal(); };
+$("#dlgRooms").addEventListener("close", ()=>{
+  if($("#dlgRooms").returnValue!=="ok") return;
+  const old = new Map(S.rooms.map(r=>[r.area+"|"+r.name,r]));
+  S.rooms = parseRooms($("#roomsText").value).map(r=>{ const o=old.get(r.area+"|"+r.name); return o?{...r,id:o.id,cleared:o.cleared,clearedAt:o.clearedAt}:r; });
+  save(); renderRooms();
+});
+
+/* Einstellungen */
+$("#s-name").oninput = e=>{ S.settings.schoolName=e.target.value; save(); renderBrand(); };
+$("#s-theme").onchange = e=>{ S.settings.theme=e.target.value; save(); renderBrand(); };
+$("#btnLogo").onclick = ()=>$("#fileLogo").click();
+$("#fileLogo").onchange = e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const img=new Image(), r=new FileReader();
+  r.onload=()=>{ img.onload=()=>{ const h=96, w=Math.round(img.width*h/img.height); const c=Object.assign(document.createElement("canvas"),{width:w,height:h}); c.getContext("2d").drawImage(img,0,0,w,h); S.settings.logo=c.toDataURL("image/png"); save(); renderBrand(); toast("Logo gespeichert"); }; img.src=r.result; };
+  r.readAsDataURL(f); e.target.value="";
+};
+$("#btnLogoDel").onclick = ()=>{ S.settings.logo=""; save(); renderBrand(); };
+$("#btnBackup").onclick = ()=>download(`evakuierung_sicherung_${today()}.json`, JSON.stringify(S,null,1), "application/json");
+$("#btnRestore").onclick = ()=>$("#fileRestore").click();
+$("#fileRestore").onchange = async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  try{ const d=JSON.parse(await f.text()); if(!Array.isArray(d.people)) throw 0; if(!confirm("Aktuelle Daten durch die Sicherung ersetzen?")) return; S=d; save(); renderAll(); toast("Sicherung geladen"); }
+  catch{ toast("Datei ist keine gültige Sicherung."); }
+};
+$("#btnWipe").onclick = ()=>{ if(confirm("Wirklich ALLE Daten (Schüler, Räume, Protokolle) auf diesem Gerät löschen?")){ S=blank(); save(); renderAll(); toast("Alle Daten gelöscht"); } };
+$("#btnDemo").onclick = ()=>{
+  if(S.people.length && !confirm("Aktuelle Schülerliste durch Demodaten ersetzen?")) return;
+  const csv = `Nachname;Vorname;Klasse;Bedarf;Raum
+Albrecht;Lena;1/2;Rollstuhl|Pflege;
+Bauer;Jonas;1/2;Schulbegleitung|Weglauftendenz;
+Celik;Aylin;1/2;;
+Dietrich;Paul;1/2;Hörbeeinträchtigung;
+Engel;Mila;3/4;Epilepsie|Schulbegleitung;
+Fischer;Noah;3/4;;
+Günther;Emma;3/4;Rollstuhl;Physiotherapie
+Hoffmann;Leon;3/4;Sehbeeinträchtigung;
+Ivanova;Sofia;5/6;;
+Jansen;Elias;5/6;Rollstuhl|Pflege|Schulbegleitung;
+Krüger;Hannah;5/6;;Logopädie
+Lorenz;Finn;5/6;Weglauftendenz;
+Meyer;Lea;7/8;;
+Nowak;Tim;7/8;Hörbeeinträchtigung;
+Özdemir;Sara;7/8;Diabetes;
+Peters;Luca;7/8;;Snoezelraum`;
+  S.people = rowsToPeople(parseCSV(csv)); S.people[2].present=false; S.people[13].present=false; S.date=today(); save(); renderAll(); show("praesenz"); toast("Demodaten geladen");
+};
+
+/* Warnung beim Verlassen während Alarm */
+window.addEventListener("beforeunload", e=>{ if(S.alarm){ e.preventDefault(); e.returnValue=""; } });
+document.addEventListener("visibilitychange", async ()=>{ if(S.alarm && document.visibilityState==="visible" && !wakeLock){ try{ wakeLock=await navigator.wakeLock?.request("screen"); }catch{} } });
+
+/* ================= Start ================= */
+load(); renderAll();
+if(S.alarm){ show("alarm"); startTimer(); }
+</script>
+</body>
+</html>
